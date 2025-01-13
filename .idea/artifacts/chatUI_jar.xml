@@ -1,0 +1,29 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="chatUI:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/chatUI_jar</output-path>
+    <root id="archive" name="chatUI.jar">
+      <element id="module-output" name="chatUI" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/controlsfx/controlsfx/11.1.2/controlsfx-11.1.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/openjfx/javafx-controls/17.0.6/javafx-controls-17.0.6.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/openjfx/javafx-base/17.0.6/javafx-base-17.0.6-win.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/openjfx/javafx-base/17.0.6/javafx-base-17.0.6.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/com/fasterxml/jackson/core/jackson-core/2.15.0/jackson-core-2.15.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/kordamp/ikonli/ikonli-javafx/12.3.1/ikonli-javafx-12.3.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/commons-codec/commons-codec/1.11/commons-codec-1.11.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/openjfx/javafx-graphics/17.0.6/javafx-graphics-17.0.6-win.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/commons-logging/commons-logging/1.2/commons-logging-1.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/apache/httpcomponents/httpmime/4.5.13/httpmime-4.5.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/kordamp/ikonli/ikonli-core/12.3.1/ikonli-core-12.3.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/kordamp/bootstrapfx/bootstrapfx-core/0.4.0/bootstrapfx-core-0.4.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/com/fasterxml/jackson/core/jackson-annotations/2.15.0/jackson-annotations-2.15.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/openjfx/javafx-graphics/17.0.6/javafx-graphics-17.0.6.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/openjfx/javafx-controls/17.0.6/javafx-controls-17.0.6-win.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/openjfx/javafx-fxml/17.0.6/javafx-fxml-17.0.6-win.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/com/fasterxml/jackson/core/jackson-databind/2.15.0/jackson-databind-2.15.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/com/alibaba/fastjson/1.2.83/fastjson-1.2.83.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="F:/Maven/apache-maven-3.6.1/mvn_repo/org/openjfx/javafx-fxml/17.0.6/javafx-fxml-17.0.6.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

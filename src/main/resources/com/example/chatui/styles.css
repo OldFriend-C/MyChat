@@ -1,0 +1,75 @@
+/* 整体 ListView 滚动条 */
+.scroll-bar:vertical {
+    -fx-background-color: transparent; /* 背景色 */
+    -fx-pref-width: 10px; /* 设定滚动条宽度 */
+}
+
+.scroll-bar:vertical .increment-button,
+.scroll-bar:vertical .decrement-button {
+    -fx-min-width: 0;
+    -fx-min-height: 0;
+    -fx-pref-width: 0;
+    -fx-pref-height: 0;
+    -fx-max-width: 0;
+    -fx-max-height: 0;
+    -fx-opacity: 0; /* 可选：完全透明 */
+}
+
+/* 滚动条轨道 */
+.scroll-bar:vertical .track {
+    -fx-background-color: transparent; /* 滚动条轨道背景色 */
+}
+
+/* 滚动条滑块 */
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #DBDBDB; /* 滚动条滑块颜色 */
+    -fx-background-insets: 1; /* 滚动条滑块内边距 */
+}
+
+/* 鼠标悬停时滑块的颜色 */
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #8c8c8c; /* 鼠标悬停颜色 */
+}
+
+.text-area {
+    -fx-border-color: transparent; /* 可选：保持透明边框 */
+    -fx-background-color: transparent; /* 可选：保持透明背景 */
+}
+
+.list-view {
+    -fx-background-color: transparent; /* 设置背景为透明 */
+}
+
+.list-view .list-cell {
+    -fx-background-color: transparent; /* 设置单元格背景为透明 */
+    -fx-border-width: 0; /* 去掉边框 */
+}
+
+.list-view .list-cell:selected {
+    -fx-background-color: transparent; /* 选中时背景透明 */
+}
+
+.list-view .list-cell:hover {
+    -fx-background-color: transparent; /* 悬停时背景透明 */
+}
+
+.icon {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 5, 0, 0, 1);
+    -fx-border-color: black;
+    -fx-border-width: 2;
+}
+
+.search-dialog {
+    -fx-background-color: #F2F2F2; /* 设置背景色 */
+    -fx-border-width: 0.2;
+    -fx-background-radius: 15px; /* 设置圆角 */
+    -fx-border-color: #8a8e94; /* 边框颜色 */
+    -fx-border-radius: 15px;
+}
+
+.search-pane {
+    -fx-background-color: #F2F2F2; /* 设置背景色 */
+    -fx-background-radius: 15px; /* 设置圆角 */
+    -fx-border-color: transparent ; /* 边框颜色 */
+    -fx-border-radius: 15px;
+}
