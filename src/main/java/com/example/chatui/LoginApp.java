@@ -1,6 +1,7 @@
 package com.example.chatui;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.chatui.MQChat.ChatClient;
 import com.example.chatui.basic.LoginBasicTool;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -18,10 +19,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
@@ -54,6 +53,7 @@ public class LoginApp extends Application {
 
     public static String nowUsername;
     public static String nowPassword;
+    public static ChatClient chatClient;
 
     @Override
     public void start(Stage primaryStage) {
@@ -135,6 +135,7 @@ public class LoginApp extends Application {
                 if(result){
                     nowUsername=username;
                     nowPassword=password;
+                    chatClient=new ChatClient(username);
                     ChatApp chatApp = new ChatApp();
                     chatApp.start(new Stage());
                     ((Stage) vbox.getScene().getWindow()).close();
