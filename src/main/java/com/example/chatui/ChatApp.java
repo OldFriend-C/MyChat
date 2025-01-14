@@ -20,6 +20,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -28,21 +29,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.chatui.LoginApp.avatar;
-import static com.example.chatui.basic.LoginBasicTool.getFriendsList;
+import static com.example.chatui.basic.LoginBasicTool.*;
 
 public class ChatApp extends Application {
 
     public static User chosenUser;
     private static VBox functionPlace=new VBox();
     private static VBox contentPlace=new VBox();
-    private static VBox chatPlace=new VBox();
-    private static List<User> friendsList;
+    public static VBox chatPlace=new VBox();
+    public static List<User> friendsList;
 
 
     @Override
     public void start(Stage primaryStage) {
         // 隐藏自带的标题栏
-        primaryStage.initStyle(StageStyle.UNDECORATED);
+        primaryStage.initStyle(StageStyle.TRANSPARENT);
 
         // 创建自定义标题栏
         HBox titleBar = LoginBasicTool.creatChatTitle(primaryStage);
@@ -58,17 +59,19 @@ public class ChatApp extends Application {
         VBox rightPane = chatPane();
 
         // 创建整个界面的根节点
-        HBox root = new HBox(leftPane, centerPane, rightPane);
-        root.setAlignment(Pos.CENTER);
-        root.setSpacing(0);
-        root.setPadding(new Insets(0));
-        root.setStyle("-fx-background-color: #FFFFFF;");
+        HBox allPane = new HBox(leftPane, centerPane, rightPane);
+        allPane.setAlignment(Pos.CENTER);
+        allPane.setSpacing(0);
+        allPane.setPadding(new Insets(0));
+        allPane.setStyle("-fx-background-color: #FFFFFF;");
         HBox.setHgrow(leftPane, Priority.ALWAYS);
         HBox.setHgrow(centerPane, Priority.ALWAYS);
         HBox.setHgrow(rightPane, Priority.ALWAYS);
 
+        VBox rootPane=new VBox(titleBar,allPane);
         // 设置背景为全白色
-        Scene scene = new Scene(new VBox(titleBar, root), 1200, 800);
+        Scene scene = new Scene(rootPane, 1200, 800);
+        scene.setFill(Color.TRANSPARENT);
         scene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.setTitle("Chat App");
@@ -125,27 +128,10 @@ public class ChatApp extends Application {
         friendsList=getFriendsList();//获取好友列表
         //创建好友列表
         ListView<User> friendsListView = new ListView<>();
-
-        double cellHeight=90;
-
-        friendsListView.setPrefHeight(friendsList.size()*cellHeight);
         friendsListView.getItems().addAll(friendsList);
-        friendsListView.setCellFactory(param -> new UserCell()); // 设置自定义 Cell
-        friendsListView.setStyle("-fx-background-color: transparent");
-        friendsListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            chosenUser = newValue; // 更新选中的用户
-            updataChatName();
-        });
+        configureUserListView(friendsListView,false);
 
-        // 鼠标进入事件
-        contentPlace.setOnMouseEntered(event -> {
-            friendsListView.lookup(".scroll-bar:vertical").setVisible(true); // 显示垂直滚动条
-        });
 
-        // 鼠标退出事件
-        contentPlace.setOnMouseExited(event -> {
-            friendsListView.lookup(".scroll-bar:vertical").setVisible(false); // 显示垂直滚动条
-        });
 
         // 添加成员列表
         contentPlace.getChildren().add(friendsListView);
@@ -289,15 +275,7 @@ public class ChatApp extends Application {
         return chatPlace;
     }
 
-    private void updataChatName() {
-        Text chatname= (Text) chatPlace.getChildren().get(0);
-        if(chosenUser==null){
-            chatname.setText("");
-        }
-        else{
-            chatname.setText(chosenUser.getName());
-        }
-    }
+
 
     private void sendMessage(TextArea inputArea,ListView<Message> messageList) {
         String message = inputArea.getText().trim();

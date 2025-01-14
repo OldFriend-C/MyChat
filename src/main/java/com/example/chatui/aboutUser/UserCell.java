@@ -1,20 +1,29 @@
 package com.example.chatui.aboutUser;
 
 import com.example.chatui.ChatApp;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 
+import static com.example.chatui.basic.LoginBasicTool.isFriendWithCurrentUser;
+
 public class UserCell extends ListCell<User> {
-    private HBox hBox = new HBox(10);
+    public HBox hBox = new HBox(10);
     private Circle avatarCircle = new Circle(30); // 圆形头像，半径为 25
     private ImageView avatarImageView = new ImageView();
     private Text nameText = new Text();
+    public HBox rightBox=new HBox();
+    public HBox leftBox=new HBox(5);
+
+    public Button addFriendButton = new Button("添加好友");
 
     public UserCell() {
         super();
+
 
         // 将头像视图设置为与圆形相同的大小
         avatarCircle.setCenterX(30);
@@ -28,8 +37,9 @@ public class UserCell extends ListCell<User> {
 
         nameText.setStyle(  "-fx-font-weight: bold;");
 
-
-        hBox.getChildren().addAll(avatarImageView, nameText);
+        leftBox.setAlignment(Pos.CENTER_LEFT);
+        // 将头像和名称放在左侧 HBox 中
+        leftBox.getChildren().addAll(avatarImageView, nameText);
         setGraphic(hBox);
     }
 
@@ -39,6 +49,9 @@ public class UserCell extends ListCell<User> {
         if (empty || user == null) {
             setGraphic(null);
         } else {
+            if(isFriendWithCurrentUser(user)){
+                addFriendButton.setVisible(false);
+            }
             avatarImageView.setImage(user.getAvatar());
             nameText.setText(user.getName());
             setGraphic(hBox);
@@ -55,4 +68,5 @@ public class UserCell extends ListCell<User> {
             }
         }
     }
+
 }

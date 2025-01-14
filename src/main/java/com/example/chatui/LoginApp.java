@@ -18,8 +18,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
@@ -39,7 +41,7 @@ import java.util.stream.Collectors;
 import static com.example.chatui.basic.LoginBasicTool.*;
 
 public class LoginApp extends Application {
-    private static final String hostIP="192.168.1.105";
+    private static final String hostIP="192.168.1.108";
     private static final String port="8888";
 
     private VBox vbox; // 将 vbox 设为类变量
@@ -56,21 +58,19 @@ public class LoginApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("登录界面");
-        primaryStage.setResizable(false);
-        primaryStage.initStyle(StageStyle.UNDECORATED);
-
-
         HBox titleBar = LoginBasicTool.createTitleBar(primaryStage);
         vbox = new VBox();
         vbox.setPadding(new Insets(30));
         vbox.setSpacing(5);
-        vbox.setStyle("-fx-background-color: #FFFFFF ; ");
+        vbox.setStyle("-fx-background-color: #FFFFFF ;");
         vbox.setAlignment(Pos.CENTER);
         showLoginForm();
 
         VBox mainLayout = new VBox(titleBar, vbox);
         Scene scene = new Scene(mainLayout, 400, 400);
+        scene.setFill(Color.TRANSPARENT);
         primaryStage.setScene(scene);
+        primaryStage.initStyle(StageStyle.TRANSPARENT);
         primaryStage.show();
     }
 

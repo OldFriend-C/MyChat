@@ -3,6 +3,7 @@ package com.example.chatui.basic;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.example.chatui.aboutUser.User;
+import com.example.chatui.aboutUser.UserCell;
 import javafx.animation.TranslateTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -38,17 +39,18 @@ import javafx.scene.control.Alert.AlertType;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.example.chatui.ChatApp.*;
 import static com.example.chatui.LoginApp.*;
 
 public class LoginBasicTool {
     private static double xOffset = 0;
     private static double yOffset = 0;
+
+    private static List<User> searchFriends = new ArrayList<>();
     private LoginBasicTool() {
     }
      private static String toRgbString(Paint paint) {
@@ -197,7 +199,7 @@ public class LoginBasicTool {
         minButton.setStyle("-fx-background-color: transparent;");
         minButton.setOnAction(e -> primaryStage.setIconified(true));
         minButton.setOnMouseEntered(e -> {
-            minButton.setStyle("-fx-background-color: rgba(255,255,255,0.2)");
+            minButton.setStyle("-fx-background-color: rgba(255,255,255,0.5)");
         });
         minButton.setOnMouseExited(e -> {
             minButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #564a4a");
@@ -214,7 +216,7 @@ public class LoginBasicTool {
         closeButton.setStyle("-fx-background-color: transparent;");
         closeButton.setOnAction(e -> primaryStage.close());
         closeButton.setOnMouseEntered(e -> {
-            closeButton.setStyle("-fx-background-color: rgba(255,255,255,0.2)");
+            closeButton.setStyle("-fx-background-color: rgba(255,255,255,0.5)");
         });
         closeButton.setOnMouseExited(e -> {
             closeButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #564a4a;");
@@ -371,12 +373,7 @@ public class LoginBasicTool {
                     User user = new User();
                     user.setUsername(username);
                     String avatarBase64String = userObject.getString("avatar"); // 这里获取数据部分
-                    // 解码 Base64 字符串为字节数组
-                    byte[] imageBytes = Base64.getDecoder().decode(avatarBase64String);
-                    Image avatar=new Image(new ByteArrayInputStream(imageBytes)); // 获取头像
-                    String filePath="avatar/"+username+"_avatar.png";
-                    saveBase64ToFile(avatarBase64String,filePath);
-                    user.setAvatar(avatar);
+                    user.setAvatar(avatarBae64ToImage(avatarBase64String));
                     userList.add(user);
                 }
                 return userList;
@@ -394,6 +391,8 @@ public class LoginBasicTool {
 
     public static void showSearchDialog(Stage primaryStage) {
         // 创建搜索框
+        searchFriends=new ArrayList<>(); //清空搜索的好友
+        Stage dialog = new Stage();
         HBox searchPane=new HBox(10);
         searchPane.setMaxWidth(700);
         searchPane.setAlignment(Pos.CENTER);
@@ -430,18 +429,28 @@ public class LoginBasicTool {
         searchFiledAndClear.getChildren().addAll(searchField,clearButton);
 
         //添加关闭按钮
-        Button closeButton = createCloseButton(primaryStage);
+        Button closeButton = createCloseButton(dialog);
         //完成上方搜索面板
         searchPane.getChildren().addAll(searchIcon,searchFiledAndClear,closeButton);
 
+        //下方搜索得到的用户列表
+        ListView<User> searchedFriendsListView=new ListView<>();
+        searchedFriendsListView.setCellFactory(listView -> new UserCell());
+        double cellHeight=90;
+
+        searchedFriendsListView.setPrefHeight(searchFriends.size()*cellHeight);
+        searchedFriendsListView.getItems().addAll(searchFriends);
+        searchedFriendsListView.setCellFactory(param -> new UserCell()); // 设置自定义 Cell
+        searchedFriendsListView.setStyle("-fx-background-color: transparent");
+
         //添加到整体布局中
-        searchDialog.getChildren().add(searchPane);
+        searchDialog.getChildren().addAll(searchPane,searchedFriendsListView);
         // 创建搜索结果列表
-        // 创建场景并添加到对话框
+
         Scene scene = new Scene(searchDialog, 720, 500);
         scene.setFill(Color.TRANSPARENT);
         scene.getStylesheets().add(LoginBasicTool.class.getResource("/com/example/chatui/styles.css").toExternalForm()); // 加载 CSS 文件
-        Stage dialog = new Stage();
+
         // 添加鼠标拖动事件监听器
         searchDialog.setOnMousePressed(LoginBasicTool::handleMousePressed);
         searchDialog.setOnMouseDragged(event -> handleMouseDragged(event, dialog));
@@ -451,68 +460,148 @@ public class LoginBasicTool {
         dialog.initModality(Modality.WINDOW_MODAL);
         dialog.initStyle(StageStyle.TRANSPARENT); // 去除标题栏
 
-        dialog.setTitle("搜索好友");
         dialog.setScene(scene);
         dialog.show();
         // 监听文本框内容变化
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
             // 根据文本框内容控制清除按钮的可见性
             clearButton.setVisible(!newValue.isEmpty());
-        });
-
-        // 添加回车键事件监听
-        searchField.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                String searchusername=searchField.getText();
-                List<User> friends = searchFriends(searchusername);
-                showSearchResults(friends);
+            String searchusername=searchField.getText();
+            List<User> friends = searchFriends(searchusername);
+            if (friends != null) {
+                showSearchResults(friends, searchedFriendsListView);
             }
         });
 
+        // 鼠标进入事件
+        searchDialog.setOnMouseEntered(event -> {
+            searchedFriendsListView.lookup(".scroll-bar:vertical").setVisible(true); // 显示垂直滚动条
+        });
+
+        // 鼠标退出事件
+        searchDialog.setOnMouseExited(event -> {
+            searchedFriendsListView.lookup(".scroll-bar:vertical").setVisible(false); // 显示垂直滚动条
+        });
+
 
     }
 
+    //TODO:搜索好友功能
     private static List<User> searchFriends(String username) {
-
-        // 这里假设有一个方法可以根据用户名查找好友
-        // 你需要实现这个方法来从服务器获取好友列表
-        // 例如：
-        // return getFriendsList().stream().filter(user -> user.getName().contains(username)).collect(Collectors.toList());
-
+        if(Objects.equals(username, "")){
+            return new ArrayList<User>();
+        }
         // 示例返回值，实际需要根据你的逻辑来实现
-        return getFriendsList().stream()
-                .filter(user -> user.getName().toLowerCase().contains(username.toLowerCase()))
-                .collect(Collectors.toList());
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet get = new HttpGet(userUrl+username+"/"+nowUsername+"/searchFriends");
+            // 执行请求
+            HttpResponse response = httpClient.execute(get);
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == 200) {
+
+
+                JSONObject jsonObject=getJsonObject(response);
+                int code=jsonObject.getIntValue("code");
+                //失败
+                if(code==0){
+                    System.out.println("搜索好友失败");
+                    return null;
+                }
+                JSONArray dataArray=jsonObject.getJSONArray("data");
+                List<User> searchFriends=new ArrayList<>();
+                for(int i=0;i<dataArray.size();i++){
+                    User friend=new User();
+                    JSONObject userObj=dataArray.getJSONObject(i);
+                    String friendname=userObj.getString("username");
+                    friend.setUsername(friendname);
+                    String avatarBase64=userObj.getString("avatar");
+                    friend.setAvatar(avatarBae64ToImage(avatarBase64));
+                    searchFriends.add(friend);
+                }
+                return searchFriends;
+            }
+            else {
+                System.err.println("搜索好友失败,响应代码：" + statusCode);
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("搜索好友失败:" + e.getMessage());
+            return null;
+        }
     }
 
-    private static void showSearchResults(List<User> friends) {
-        // 显示搜索结果，可以选择一种方式来展示
-        // 这里使用 Alert 作为示例
-        StringBuilder result = new StringBuilder("找到的好友:\n");
-        for (User friend : friends) {
-            result.append(friend.getName()).append("\n");
-        }
+    private static void showSearchResults(List<User> friends,ListView<User> listView) {
+        listView.getItems().clear();
+        listView.setStyle("-fx-background-color: transparent");
+        listView.getItems().addAll(friends);
+        configureUserListView(listView,true);
 
-        Alert alert = new Alert(AlertType.INFORMATION, result.toString(), ButtonType.OK);
-        alert.setTitle("搜索结果");
-        alert.showAndWait();
     }
 
 
-    //TODO:存放文件测试
+    private static Image avatarBae64ToImage(String avatarBase64){
+        byte[] imageBytes = Base64.getDecoder().decode(avatarBase64);
+        Image avatar = new Image(new ByteArrayInputStream(imageBytes));
+        return avatar;
+    }
 
-    public static void saveBase64ToFile(String base64String, String filepath) throws IOException {
-        // 去掉 Base64 编码的头信息，如果有的话
-        String cleanBase64 = base64String.replace("data:image/png;base64,", "")
-                .replace("data:image/jpeg;base64,", "");
+    public static void configureUserListView(ListView<User> listView, boolean showAddFriendButton) {
+        double cellHeight = 90;
+        listView.setPrefHeight(listView.getItems().size() * cellHeight);
+        listView.setCellFactory(param -> {
+            UserCell cell = new UserCell();
+            if (showAddFriendButton) {
+                cell.leftBox.setPrefWidth(200);
+                cell.rightBox.setPrefWidth(450);
+                cell.addFriendButton.setFocusTraversable(false);
+                cell.addFriendButton.getStyleClass().add("add-friend-button");
+                cell.rightBox.setAlignment(Pos.CENTER_RIGHT);
+                cell.rightBox.getChildren().add(cell.addFriendButton);
+                cell.hBox.getChildren().addAll(cell.leftBox, cell.rightBox);
+            }
+            else{
+                cell.hBox.getChildren().add(cell.leftBox);
+            }
+            return cell;
+        });
+        listView.setStyle("-fx-background-color: transparent");
 
-        // 解码 Base64 字符串
-        byte[] bytes = Base64.getDecoder().decode(cleanBase64);
+        // 鼠标进入事件
+        listView.setOnMouseEntered(event -> {
+            listView.lookup(".scroll-bar:vertical").setVisible(true); // 显示垂直滚动条
+        });
 
-        // 保存文件
-        try (FileOutputStream fos = new FileOutputStream(filepath)) {
-            fos.write(bytes);
+        // 鼠标退出事件
+        listView.setOnMouseExited(event -> {
+            listView.lookup(".scroll-bar:vertical").setVisible(false); // 隐藏垂直滚动条
+        });
+        // 选中事件
+        listView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            chosenUser = newValue; // 更新选中的用户
+            updataChatName();
+        });
+
+    }
+
+
+    public static void updataChatName() {
+        Text chatname= (Text) chatPlace.getChildren().get(0);
+        if(chosenUser==null){
+            chatname.setText("");
         }
+        else{
+            chatname.setText(chosenUser.getName());
+        }
+    }
+
+    public static boolean isFriendWithCurrentUser(User user){
+        for(User friend: friendsList){
+            if(user.getName().equals(friend.getName())){
+                return true;
+            }
+        }
+        return false;
     }
 
 
