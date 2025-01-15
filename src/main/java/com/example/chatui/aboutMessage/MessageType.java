@@ -4,8 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum MessageType {
-    FRIENDREQUEST("friendRequest"),
-    MESSAGE("message");
+    FRIENDREQUEST("FRIENDREQUEST"),
+    MESSAGE("MESSAGE");
     private final String description;
 
     MessageType(String description) {

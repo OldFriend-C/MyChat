@@ -1,7 +1,7 @@
 package com.example.chatui;
 
 import com.alibaba.fastjson.JSONObject;
-import com.example.chatui.MQChat.ChatClient;
+import com.example.chatui.MQChat.RequestClient;
 import com.example.chatui.basic.LoginBasicTool;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -53,7 +53,7 @@ public class LoginApp extends Application {
 
     public static String nowUsername;
     public static String nowPassword;
-    public static ChatClient chatClient;
+    public static RequestClient RequestClient;
 
     @Override
     public void start(Stage primaryStage) {
@@ -133,11 +133,7 @@ public class LoginApp extends Application {
             if (isValidAccountNumber(username) && isValidPassword(password)) {
                 boolean result=sendLoginData(username, password);
                 if(result){
-                    nowUsername=username;
-                    nowPassword=password;
-                    chatClient=new ChatClient(username);
-                    ChatApp chatApp = new ChatApp();
-                    chatApp.start(new Stage());
+                    loginAndRegisterSet(username, password);
                     ((Stage) vbox.getScene().getWindow()).close();
                 }
                 else{
@@ -241,10 +237,7 @@ public class LoginApp extends Application {
                     boolean result=sendRegisterData(username, password);
                     if(result){
                         // 注册成功逻辑
-                        nowUsername=username;
-                        nowPassword=password;
-                        ChatApp chatApp = new ChatApp();
-                        chatApp.start(new Stage());
+                        loginAndRegisterSet(username, password);
                         ((Stage) vbox.getScene().getWindow()).close();
                     }
                     else{
@@ -382,6 +375,18 @@ public class LoginApp extends Application {
                 new KeyFrame(Duration.seconds(2), e -> errorLabel.setVisible(false))
         );
         timeline.play();
+    }
+
+    public void loginAndRegisterSet(String username, String password) {
+        nowUsername=username;
+        nowPassword=password;
+        //开启监听好友请求
+        RequestClient =new RequestClient(username);
+
+
+        //TODO:开启监听好友信息
+        ChatApp chatApp = new ChatApp();
+        chatApp.start(new Stage());
     }
 
     public static void main(String[] args) {

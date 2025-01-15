@@ -38,7 +38,7 @@ public class ChatApp extends Application {
     public static VBox chatPlace=new VBox();
     public static List<User> friendsList=new ArrayList<>();
 
-    private static VBox sliderbar;
+    private static VBox sliderbar=new VBox();
     public static StackPane root=new StackPane();
 
     public static boolean isSidebarVisible=false;
@@ -46,6 +46,10 @@ public class ChatApp extends Application {
     private static final double SCENHEIGHT=800;
 
     public static List<User> requestUsers=new ArrayList<>();
+
+    private static ListView<User> friendsListView=new ListView<>();
+    private static ListView<User> requestListView=new ListView<>();
+
 
     @Override
     public void start(Stage primaryStage) {
@@ -66,7 +70,7 @@ public class ChatApp extends Application {
         VBox rightPane = chatPane();
 
         //创建侧边栏
-        sliderbar=createSidebar();
+        configSidebar();
 
 
         //下方主要内容
@@ -143,12 +147,13 @@ public class ChatApp extends Application {
 
         friendsList=getFriendsList();//获取好友列表
         //创建好友列表
-        ListView<User> friendsListView = new ListView<>();
+        friendsListView = new ListView<>();
         friendsListView.getItems().addAll(friendsList);
         configureUserListView(friendsListView,false);
 
         // 添加成员列表
         contentPlace.getChildren().add(friendsListView);
+
 
         return contentPlace;
     }
@@ -302,20 +307,21 @@ public class ChatApp extends Application {
     }
 
     //创建侧边栏
-    private static VBox createSidebar() {
-        VBox sidebar = new VBox();
-        sidebar.setId("sidebar");
-        sidebar.setAlignment(Pos.TOP_CENTER);
-        sidebar.setSpacing(10);
-        sidebar.setMaxWidth(300);
-        sidebar.setMaxHeight(780);
-        sidebar.setStyle("-fx-background-color: #f0f0f0; -fx-padding: 20;-fx-background-radius: 15;-fx-border-radius: 15");
+    private static void configSidebar() {
+        sliderbar = new VBox();
+        sliderbar.setId("sidebar");
+        sliderbar.setAlignment(Pos.TOP_CENTER);
+        sliderbar.setSpacing(10);
+        sliderbar.setMaxWidth(300);
+        sliderbar.setMaxHeight(780);
+        sliderbar.setStyle("-fx-background-color: #f0f0f0; -fx-padding: 20;-fx-background-radius: 15;-fx-border-radius: 15");
+
         //TODO:显示请求的好友
-        ListView<User> userListView=new ListView<>();
-        userListView.getItems().addAll(requestUsers);
-        configureUserListView(userListView,false);
+        requestListView.getItems().addAll(requestUsers);
+        configureUserListView(requestListView,false);
+
+        sliderbar.getChildren().add(requestListView);
         // ...
-        return sidebar;
     }
 
 
@@ -411,9 +417,15 @@ public class ChatApp extends Application {
     }
 
 
-
+    public static void updateSilderBar(){
+        System.out.println("更新请求框成功");
+        requestListView.getItems().addAll(requestUsers);
+        configureUserListView(requestListView, false);
+    }
 
     public static void main(String[] args) {
         launch(args);
     }
+
+
 }

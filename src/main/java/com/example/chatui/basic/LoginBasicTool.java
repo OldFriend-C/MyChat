@@ -470,15 +470,14 @@ public class LoginBasicTool {
     }
 
 
-    private static Image avatarBae64ToImage(String avatarBase64){
+    public static Image avatarBae64ToImage(String avatarBase64){
         byte[] imageBytes = Base64.getDecoder().decode(avatarBase64);
         Image avatar = new Image(new ByteArrayInputStream(imageBytes));
         return avatar;
     }
 
     public static void configureUserListView(ListView<User> listView, boolean showAddFriendButton) {
-        double cellHeight = 90;
-        listView.setPrefHeight(listView.getItems().size() * cellHeight);
+        listView.setPrefHeight(800);
         listView.setCellFactory(param -> {
             UserCell cell = new UserCell();
             if (showAddFriendButton) {
@@ -533,7 +532,6 @@ public class LoginBasicTool {
         }
         return false;
     }
-
 
 
 }

@@ -23,4 +23,6 @@ module com.example.chatui {
     opens com.example.chatui.basic to javafx.fxml;
     exports com.example.chatui.friendRequest;
     exports com.example.chatui.MQChat;
+    exports com.example.chatui;
+    exports com.example.chatui.aboutFriend;
 }
