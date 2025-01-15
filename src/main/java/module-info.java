@@ -15,7 +15,6 @@ module com.example.chatui {
     requires java.sql;
 
     opens com.example.chatui to javafx.fxml;
-    exports com.example.chatui;
     exports com.example.chatui.aboutMessage;
     opens com.example.chatui.aboutMessage to javafx.fxml;
     exports com.example.chatui.aboutUser;

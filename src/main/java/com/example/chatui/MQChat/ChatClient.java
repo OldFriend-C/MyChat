@@ -1,5 +1,9 @@
 package com.example.chatui.MQChat;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.example.chatui.aboutMessage.MessageType;
+import com.example.chatui.friendRequest.FriendRequest;
 import com.rabbitmq.client.*;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
@@ -38,14 +42,23 @@ public class ChatClient {
             // TODO:接收好友请求后通过侧边栏展现好友请求
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String message=delivery.getBody().toString();
+                String type=JSON.parseObject(message).getString("MessageType");
+                switch (type){
+                    case "message": //为好友请求类型
+                        FriendRequest friendRequest=JSON.parseObject(message,FriendRequest.class);
+
+
+                }
+
+
                 // 确保在 JavaFX 应用线程中显示对话框
-                Platform.runLater(() -> {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("新消息");
-                    alert.setHeaderText(null); // 可选设置
-                    alert.setContentText("收到消息: " + message);
-                    alert.showAndWait(); // 显示对话框
-                });
+//                Platform.runLater(() -> {
+//                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+//                    alert.setTitle("新消息");
+//                    alert.setHeaderText(null); // 可选设置
+//                    alert.setContentText("收到消息: " + message);
+//                    alert.showAndWait(); // 显示对话框
+//                });
 
             };
             channel.basicConsume(queueName, true, deliverCallback, consumerTag -> { });

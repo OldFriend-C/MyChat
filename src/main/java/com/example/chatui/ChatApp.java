@@ -1,11 +1,11 @@
 package com.example.chatui;
 
-import com.example.chatui.aboutUser.User;
-import com.example.chatui.aboutUser.UserCell;
 import com.example.chatui.aboutMessage.Message;
 import com.example.chatui.aboutMessage.MessageCell;
+import com.example.chatui.aboutUser.User;
 import com.example.chatui.basic.LoginBasicTool;
 import com.example.chatui.basic.NoSelectionModel;
+import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,17 +17,16 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.chatui.LoginApp.LogoPath;
 import static com.example.chatui.LoginApp.avatar;
 import static com.example.chatui.basic.LoginBasicTool.*;
 
@@ -37,8 +36,16 @@ public class ChatApp extends Application {
     private static VBox functionPlace=new VBox();
     private static VBox contentPlace=new VBox();
     public static VBox chatPlace=new VBox();
-    public static List<User> friendsList;
+    public static List<User> friendsList=new ArrayList<>();
 
+    private static VBox sliderbar;
+    public static StackPane root=new StackPane();
+
+    public static boolean isSidebarVisible=false;
+    private static final double SCENEWIDTH=1200;
+    private static final double SCENHEIGHT=800;
+
+    public static List<User> requestUsers=new ArrayList<>();
 
     @Override
     public void start(Stage primaryStage) {
@@ -46,7 +53,7 @@ public class ChatApp extends Application {
         primaryStage.initStyle(StageStyle.TRANSPARENT);
 
         // 创建自定义标题栏
-        HBox titleBar = LoginBasicTool.creatChatTitle(primaryStage);
+        HBox titleBar = creatChatTitle(primaryStage);
 
 
         // 创建左侧按钮列表
@@ -58,21 +65,30 @@ public class ChatApp extends Application {
         // 创建右侧聊天界面
         VBox rightPane = chatPane();
 
-        // 创建整个界面的根节点
+        //创建侧边栏
+        sliderbar=createSidebar();
+
+
+        //下方主要内容
         HBox allPane = new HBox(leftPane, centerPane, rightPane);
         allPane.setAlignment(Pos.CENTER);
         allPane.setSpacing(0);
         allPane.setPadding(new Insets(0));
         allPane.setStyle("-fx-background-color: #FFFFFF;");
+        allPane.setOnMouseClicked(e->toggleSidebar(0));
         HBox.setHgrow(leftPane, Priority.ALWAYS);
         HBox.setHgrow(centerPane, Priority.ALWAYS);
         HBox.setHgrow(rightPane, Priority.ALWAYS);
+        VBox mainPane=new VBox(titleBar,allPane);
 
-        VBox rootPane=new VBox(titleBar,allPane);
+        root.setOnMouseClicked(e->toggleSidebar(0));
+        //将全部内容加入根节点
+        root.getChildren().addAll(mainPane,sliderbar);
+
         // 设置背景为全白色
-        Scene scene = new Scene(rootPane, 1200, 800);
-        scene.setFill(Color.TRANSPARENT);
-        scene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
+        Scene scene = new Scene(root, SCENEWIDTH, SCENHEIGHT);
+        sliderbar.setTranslateX(SCENEWIDTH/2+sliderbar.getMaxWidth()/2);
+        scene.getStylesheets().add(LoginBasicTool.class.getResource("/com/example/chatui/styles.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.setTitle("Chat App");
         primaryStage.show();
@@ -131,8 +147,6 @@ public class ChatApp extends Application {
         friendsListView.getItems().addAll(friendsList);
         configureUserListView(friendsListView,false);
 
-
-
         // 添加成员列表
         contentPlace.getChildren().add(friendsListView);
 
@@ -170,6 +184,8 @@ public class ChatApp extends Application {
         MessageListView.setStyle("-fx-background-color: transparent");
         MessageListView.setEditable(false);
         MessageListView.setSelectionModel(new NoSelectionModel<>());
+        //添加可以关闭侧边通知栏的功能
+        MessageListView.setOnMouseClicked(e->toggleSidebar(0));
         chatPlace.getChildren().add(MessageListView);
 
         //功能面板
@@ -216,7 +232,6 @@ public class ChatApp extends Application {
         // 发送按钮
         HBox sendButtonBox=new HBox();
         sendButtonBox.setAlignment(Pos.CENTER_RIGHT);
-        // 发送按钮
         Button sendButton = new Button("发送");
         sendButton.setStyle("-fx-background-color: #0099FF; -fx-text-fill: #4DB8FF;"); // 增加字体大小
         sendButton.setMinWidth(80); // 设置最小宽度
@@ -285,6 +300,118 @@ public class ChatApp extends Application {
             inputArea.clear(); // 清空输入框
         }
     }
+
+    //创建侧边栏
+    private static VBox createSidebar() {
+        VBox sidebar = new VBox();
+        sidebar.setId("sidebar");
+        sidebar.setAlignment(Pos.TOP_CENTER);
+        sidebar.setSpacing(10);
+        sidebar.setMaxWidth(300);
+        sidebar.setMaxHeight(780);
+        sidebar.setStyle("-fx-background-color: #f0f0f0; -fx-padding: 20;-fx-background-radius: 15;-fx-border-radius: 15");
+        //TODO:显示请求的好友
+        ListView<User> userListView=new ListView<>();
+        userListView.getItems().addAll(requestUsers);
+        configureUserListView(userListView,false);
+        // ...
+        return sidebar;
+    }
+
+
+    private void toggleSidebar(int status) {
+        TranslateTransition transition = new TranslateTransition(Duration.millis(300), sliderbar);
+        if(isSidebarVisible){
+            transition.setToX(SCENEWIDTH/2+sliderbar.getMaxWidth()/2);
+            transition.play();
+            isSidebarVisible=!isSidebarVisible;
+        }
+        else {
+            if (status == 1) {
+                transition.setToX(SCENEWIDTH / 2 - sliderbar.getMaxWidth() / 2);
+                transition.play();
+                isSidebarVisible = !isSidebarVisible;
+            }
+        }
+    }
+
+
+
+    public  HBox creatChatTitle(Stage primaryStage) {
+        HBox titleBar = new HBox();
+        avatar.setOnMouseClicked(null);  //清除上传头像的事件监听
+        avatar.setOnMouseClicked(e->uploadAvatar(primaryStage,true)); //添加可以更改头像的监听事件
+
+        titleBar.setStyle("-fx-background-color: #FFFFFF; -fx-padding: 15;");
+        titleBar.setSpacing(20);
+        // 左侧区域的组件
+        HBox leftBox = new HBox(20);
+        leftBox.setAlignment(Pos.CENTER);
+        ImageView Logo=getAvatar(new ImageView(),LogoPath,20);
+        leftBox.getChildren().add(Logo);
+        String ChatTitle="MyChat";
+        Text chatTitleLabel = new Text(ChatTitle);
+        chatTitleLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;-fx-fill: #014be7");
+        leftBox.getChildren().add(chatTitleLabel);
+
+        titleBar.getChildren().add(leftBox);
+
+        // 中间区域的伸展
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        titleBar.getChildren().add(spacer);
+
+        // 右侧区域的组件
+        HBox rightBox = new HBox(20);
+        rightBox.setAlignment(Pos.CENTER);
+
+        // 添加通知按钮
+        Button bellButton = new Button();
+        ImageView bellIcon = new ImageView(new Image("file:icons/bell.png"));
+        bellIcon.setFitWidth(25);
+        bellIcon.setFitHeight(25);
+        bellButton.setGraphic(bellIcon);
+        bellButton.setStyle("-fx-background-color: transparent;");
+        configureBellButton(bellButton, bellIcon);
+        bellButton.setOnMouseClicked(e-> toggleSidebar(1));
+        rightBox.getChildren().add(bellButton);
+
+        // 添加搜索按钮
+        Button searchButton = new Button();
+        ImageView searchIcon = new ImageView(new Image("file:icons/search.png"));
+        searchIcon.setFitWidth(20);
+        searchIcon.setFitHeight(20);
+        searchButton.setGraphic(searchIcon);
+        searchButton.setStyle("-fx-background-color: transparent;");
+        configureSearchButton(searchButton, searchIcon);
+        searchButton.setOnMouseClicked(e->showSearchDialog(primaryStage));
+        rightBox.getChildren().add(searchButton);
+
+        // 显示用户头像
+        ImageView avatarView = getAvatar(avatar, "", 15);
+
+
+        rightBox.getChildren().add(avatarView);
+
+        // 添加最小化按钮
+        Button minButton = createMinimizeButton(primaryStage);
+        rightBox.getChildren().add(minButton);
+
+        // 添加关闭按钮
+        Button closeButton = createCloseButton(primaryStage);
+        rightBox.getChildren().add(closeButton);
+
+        titleBar.getChildren().add(rightBox);
+
+        // 添加鼠标拖动事件监听器
+        titleBar.setOnMousePressed(LoginBasicTool::handleMousePressed);
+        titleBar.setOnMouseDragged(event -> handleMouseDragged(event, primaryStage));
+
+        return titleBar;
+    }
+
+
+
 
     public static void main(String[] args) {
         launch(args);

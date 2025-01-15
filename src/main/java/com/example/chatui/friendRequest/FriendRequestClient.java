@@ -26,7 +26,6 @@ public class FriendRequestClient {
 
     private void initRabbitMQConnection() {
         try {
-            // 创建 RabbitMQ 连接和通道
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost(HOST);
             factory.setUsername(USERNAME);

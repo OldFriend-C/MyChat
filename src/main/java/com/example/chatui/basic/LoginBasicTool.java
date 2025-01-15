@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.example.chatui.aboutUser.User;
 import com.example.chatui.aboutUser.UserCell;
-import com.example.chatui.friendRequest.FriendRequestClient;
 import javafx.animation.TranslateTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -76,12 +75,12 @@ public class LoginBasicTool {
                 new Stop(1, Color.web("#ADD8E6"))
         );
     }
-    private static void handleMousePressed(MouseEvent event) {
+    public static void handleMousePressed(MouseEvent event) {
         xOffset = event.getSceneX();
         yOffset = event.getSceneY();
     }
 
-    private static void handleMouseDragged(MouseEvent event,Stage stage) {
+    public static void handleMouseDragged(MouseEvent event, Stage stage) {
         stage.setX(event.getScreenX() - xOffset);
         stage.setY(event.getScreenY() - yOffset);
     }
@@ -101,82 +100,9 @@ public class LoginBasicTool {
         return titleBar;
     }
 
-    public static HBox creatChatTitle(Stage primaryStage) {
-        HBox titleBar = new HBox();
-        avatar.setOnMouseClicked(null);  //清除上传头像的事件监听
-        avatar.setOnMouseClicked(e->uploadAvatar(primaryStage,true)); //添加可以更改头像的监听事件
-
-        titleBar.setStyle("-fx-background-color: #FFFFFF; -fx-padding: 15;");
-        titleBar.setSpacing(20);
-        // 左侧区域的组件
-        HBox leftBox = new HBox(20);
-        leftBox.setAlignment(Pos.CENTER);
-        ImageView Logo=getAvatar(new ImageView(),LogoPath,20);
-        leftBox.getChildren().add(Logo);
-        String ChatTitle="MyChat";
-        Text chatTitleLabel = new Text(ChatTitle);
-        chatTitleLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold;-fx-fill: #014be7");
-        leftBox.getChildren().add(chatTitleLabel);
-
-        titleBar.getChildren().add(leftBox);
-
-        // 中间区域的伸展
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        titleBar.getChildren().add(spacer);
-
-        // 右侧区域的组件
-        HBox rightBox = new HBox(20);
-        rightBox.setAlignment(Pos.CENTER);
-
-        // 添加通知按钮
-        Button bellButton = new Button();
-        ImageView bellIcon = new ImageView(new Image("file:icons/bell.png"));
-        bellIcon.setFitWidth(25);
-        bellIcon.setFitHeight(25);
-        bellButton.setGraphic(bellIcon);
-        bellButton.setStyle("-fx-background-color: transparent;");
-        configureBellButton(bellButton, bellIcon);
-        rightBox.getChildren().add(bellButton);
-
-        // 添加搜索按钮
-        Button searchButton = new Button();
-        ImageView searchIcon = new ImageView(new Image("file:icons/search.png"));
-        searchIcon.setFitWidth(20);
-        searchIcon.setFitHeight(20);
-        searchButton.setGraphic(searchIcon);
-        searchButton.setStyle("-fx-background-color: transparent;");
-        configureSearchButton(searchButton, searchIcon);
-        searchButton.setOnMouseClicked(e->showSearchDialog(primaryStage));
-        rightBox.getChildren().add(searchButton);
-
-        // 显示用户头像
-        ImageView avatarView = getAvatar(avatar, "", 15);
 
 
-        rightBox.getChildren().add(avatarView);
-
-        // 添加最小化按钮
-        Button minButton = createMinimizeButton(primaryStage);
-        rightBox.getChildren().add(minButton);
-
-        // 添加关闭按钮
-        Button closeButton = createCloseButton(primaryStage);
-        rightBox.getChildren().add(closeButton);
-
-        titleBar.getChildren().add(rightBox);
-
-        // 添加鼠标拖动事件监听器
-        titleBar.setOnMousePressed(event -> handleMousePressed(event));
-        titleBar.setOnMouseDragged(event -> handleMouseDragged(event, primaryStage));
-
-        return titleBar;
-    }
-
-    private static void configureBellButton(Button bellButton, ImageView bellIcon) {
-        bellButton.setOnMouseClicked(event -> {
-            bellIcon.setImage(new Image("file:icons/changedbell.png"));
-        });
+    public static void configureBellButton(Button bellButton, ImageView bellIcon) {
         bellButton.setOnMouseEntered(event -> {
             bellIcon.setImage(new Image("file:icons/changedbell.png"));
         });
@@ -185,10 +111,7 @@ public class LoginBasicTool {
         });
     }
 
-    private static void configureSearchButton(Button searchButton, ImageView searchIcon) {
-        searchButton.setOnMouseClicked(event -> {
-            searchIcon.setImage(new Image("file:icons/changedsearch.png"));
-        });
+    public static void configureSearchButton(Button searchButton, ImageView searchIcon) {
         searchButton.setOnMouseEntered(event -> {
             searchIcon.setImage(new Image("file:icons/changedsearch.png"));
         });
@@ -197,7 +120,7 @@ public class LoginBasicTool {
         });
     }
 
-    private static Button createMinimizeButton(Stage primaryStage) {
+    public static Button createMinimizeButton(Stage primaryStage) {
         ImageView minIcon = new ImageView(new Image("file:icons/minus-bold.png"));
         minIcon.setFitWidth(20);
         minIcon.setFitHeight(20);
@@ -214,7 +137,7 @@ public class LoginBasicTool {
         return minButton;
     }
 
-    private static Button createCloseButton(Stage primaryStage) {
+    public static Button createCloseButton(Stage primaryStage) {
         ImageView closeIcon = new ImageView(new Image("file:icons/close-bold.png"));
         closeIcon.setFitWidth(20);
         closeIcon.setFitHeight(20);
