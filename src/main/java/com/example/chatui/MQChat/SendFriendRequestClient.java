@@ -1,7 +1,9 @@
-package com.example.chatui.friendRequest;
+package com.example.chatui.MQChat;
 
 import com.alibaba.fastjson.JSON;
 import com.example.chatui.aboutMessage.MessageType;
+import com.example.chatui.friendRequest.GetFriendRequest;
+import com.example.chatui.friendRequest.RequestStatus;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -10,7 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
 
-public class FriendRequestClient {
+public class SendFriendRequestClient {
     private static final String QUEUE_NAME = "friendRequest";
     private static final String HOST="192.168.1.108";
     private static final int PORT=5672;
@@ -20,7 +22,7 @@ public class FriendRequestClient {
     private Connection connection;
     private Channel channel;
 
-    public FriendRequestClient() {
+    public SendFriendRequestClient() {
         initRabbitMQConnection();
     }
 
@@ -39,17 +41,25 @@ public class FriendRequestClient {
         }
     }
 
-    public void sendFriendRequest(String fromUserUsername, String toUserUsername,RequestStatus status) {
+    public void sendFriendRequest(String fromUserUsername, String toUserUsername, RequestStatus status) {
         try {
             // 创建好友请求消息
-            FriendRequest request = new FriendRequest(MessageType.FRIENDREQUEST,fromUserUsername, toUserUsername,status);
-            String json = JSON.toJSONString(request);
-
+            GetFriendRequest request = new GetFriendRequest(MessageType.FRIENDREQUEST,fromUserUsername, toUserUsername,status);
+            String requestJson = JSON.toJSONString(request);
             // 发送好友请求消息到 RabbitMQ 队列
-            channel.basicPublish("", QUEUE_NAME, null, json.getBytes(StandardCharsets.UTF_8));
-            System.out.println("Sent friend request: " + json);
+            channel.basicPublish("", QUEUE_NAME, null, requestJson.getBytes(StandardCharsets.UTF_8));
+            System.out.println("Sent friend request: " + requestJson);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void close() {
+        try {
+            channel.close();
+            connection.close();
+        } catch (IOException | TimeoutException e) {
+            System.out.println("关闭出现错误");
         }
     }
 }

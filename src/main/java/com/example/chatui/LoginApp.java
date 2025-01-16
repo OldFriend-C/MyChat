@@ -1,8 +1,9 @@
 package com.example.chatui;
 
 import com.alibaba.fastjson.JSONObject;
-import com.example.chatui.MQChat.RequestClient;
+import com.example.chatui.MQChat.GetFriendRequestClient;
 import com.example.chatui.basic.LoginBasicTool;
+import com.example.chatui.MQChat.SendFriendRequestClient;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
@@ -53,7 +54,8 @@ public class LoginApp extends Application {
 
     public static String nowUsername;
     public static String nowPassword;
-    public static RequestClient RequestClient;
+    public static GetFriendRequestClient getFriendRequestClient;
+    public static SendFriendRequestClient sendFriendRequestClient;
 
     @Override
     public void start(Stage primaryStage) {
@@ -381,10 +383,12 @@ public class LoginApp extends Application {
         nowUsername=username;
         nowPassword=password;
         //开启监听好友请求
-        RequestClient =new RequestClient(username);
+        getFriendRequestClient =new GetFriendRequestClient(username);
+        //开启准备发送好友请求的客户端
+        sendFriendRequestClient=new SendFriendRequestClient();
+        //TODO:监听好友消息
 
 
-        //TODO:开启监听好友信息
         ChatApp chatApp = new ChatApp();
         chatApp.start(new Stage());
     }

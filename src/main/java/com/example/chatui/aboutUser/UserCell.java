@@ -1,8 +1,6 @@
 package com.example.chatui.aboutUser;
 
 import com.example.chatui.ChatApp;
-import com.example.chatui.friendRequest.FriendRequestClient;
-import com.example.chatui.friendRequest.RequestStatus;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
@@ -11,15 +9,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 
-import static com.example.chatui.LoginApp.nowUsername;
-import static com.example.chatui.basic.LoginBasicTool.isFriendWithCurrentUser;
-
 public class UserCell extends ListCell<User> {
     public HBox hBox = new HBox(10);
     private Circle avatarCircle = new Circle(30); // 圆形头像，半径为 25
     private ImageView avatarImageView = new ImageView();
     private Text nameText = new Text();
-    public HBox rightBox=new HBox();
     public HBox leftBox=new HBox(5);
 
     public Button addFriendButton = new Button("添加好友");
@@ -52,15 +46,6 @@ public class UserCell extends ListCell<User> {
         if (empty || user == null) {
             setGraphic(null);
         } else {
-            if(isFriendWithCurrentUser(user)){
-                addFriendButton.setVisible(false);
-            }
-            else{
-                addFriendButton.setOnMouseClicked(e->{
-                    FriendRequestClient requestClient=new FriendRequestClient();
-                    requestClient.sendFriendRequest(nowUsername,user.getName(), RequestStatus.REQUESTED);
-                });
-            }
             avatarImageView.setImage(user.getAvatar());
             nameText.setText(user.getName());
             setGraphic(hBox);

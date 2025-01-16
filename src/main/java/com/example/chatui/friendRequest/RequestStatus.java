@@ -3,12 +3,14 @@ package com.example.chatui.friendRequest;
 import lombok.Getter;
 
 public enum RequestStatus {
-    REQUESTED("REQUESTED"),
-    ACCEPTED("ACCEPTED"),
-    DECLINED("DECLINED"),
-    REMOVED("REMOVED");
+    REQUESTED("Requested"),
+    ACCEPTED("Accepted"),
+    DECLINED("Declined"),
+    REMOVED("Removed"),
+    IRRELEVANT("Irrelevant"),
+    PENDING("Pending");
 
-
+    @Getter
     private final String description;
 
     RequestStatus(String description) {
@@ -18,5 +20,7 @@ public enum RequestStatus {
     public String getDescription() {
         return description;
     }
+
+
 
 }

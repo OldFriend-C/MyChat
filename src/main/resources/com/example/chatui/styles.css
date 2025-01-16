@@ -74,13 +74,14 @@
     -fx-border-radius: 15px;
 }
 
-.add-friend-button {
+.friend-button {
     -fx-background-color: #dcdcdc;
     -fx-background-radius: 5px;
     -fx-border-width: 0.2px;
     -fx-padding: 5px 10px;
 }
 
-.add-friend-button:hover {
+.friend-button:hover {
     -fx-background-color: #c9c7c7;
 }
+

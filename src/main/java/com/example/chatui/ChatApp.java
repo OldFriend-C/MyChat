@@ -1,10 +1,14 @@
 package com.example.chatui;
 
+import com.example.chatui.aboutFriend.RequestFriend;
+import com.example.chatui.aboutFriend.RequestFriendCell;
+import com.example.chatui.aboutFriend.SearchFriend;
 import com.example.chatui.aboutMessage.Message;
 import com.example.chatui.aboutMessage.MessageCell;
 import com.example.chatui.aboutUser.User;
 import com.example.chatui.basic.LoginBasicTool;
 import com.example.chatui.basic.NoSelectionModel;
+import com.example.chatui.friendRequest.RequestStatus;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -25,6 +29,7 @@ import javafx.util.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static com.example.chatui.LoginApp.LogoPath;
 import static com.example.chatui.LoginApp.avatar;
@@ -33,6 +38,8 @@ import static com.example.chatui.basic.LoginBasicTool.*;
 public class ChatApp extends Application {
 
     public static User chosenUser;
+    public static SearchFriend chosenSearchFriend;
+    public static RequestFriend chosenRequestFriend;
     private static VBox functionPlace=new VBox();
     private static VBox contentPlace=new VBox();
     public static VBox chatPlace=new VBox();
@@ -45,10 +52,13 @@ public class ChatApp extends Application {
     private static final double SCENEWIDTH=1200;
     private static final double SCENHEIGHT=800;
 
-    public static List<User> requestUsers=new ArrayList<>();
+    public static List<RequestFriend> requestUsers=new ArrayList<>();
 
     private static ListView<User> friendsListView=new ListView<>();
-    private static ListView<User> requestListView=new ListView<>();
+    private static ListView<RequestFriend> requestListView=new ListView<>();
+
+    private static ImageView bellIcon=new ImageView();
+    public static boolean isBellRedPoint;
 
 
     @Override
@@ -71,6 +81,7 @@ public class ChatApp extends Application {
 
         //创建侧边栏
         configSidebar();
+
 
 
         //下方主要内容
@@ -149,7 +160,7 @@ public class ChatApp extends Application {
         //创建好友列表
         friendsListView = new ListView<>();
         friendsListView.getItems().addAll(friendsList);
-        configureUserListView(friendsListView,false);
+        configureUserListView(friendsListView);
 
         // 添加成员列表
         contentPlace.getChildren().add(friendsListView);
@@ -312,20 +323,18 @@ public class ChatApp extends Application {
         sliderbar.setId("sidebar");
         sliderbar.setAlignment(Pos.TOP_CENTER);
         sliderbar.setSpacing(10);
-        sliderbar.setMaxWidth(300);
+        sliderbar.setMaxWidth(380);
         sliderbar.setMaxHeight(780);
         sliderbar.setStyle("-fx-background-color: #f0f0f0; -fx-padding: 20;-fx-background-radius: 15;-fx-border-radius: 15");
-
-        //TODO:显示请求的好友
-        requestListView.getItems().addAll(requestUsers);
-        configureUserListView(requestListView,false);
-
+        requestUsers=loadRequest();
+        updateSilderBar();
         sliderbar.getChildren().add(requestListView);
         // ...
     }
 
 
     private void toggleSidebar(int status) {
+        chosenRequestFriend=null;
         TranslateTransition transition = new TranslateTransition(Duration.millis(300), sliderbar);
         if(isSidebarVisible){
             transition.setToX(SCENEWIDTH/2+sliderbar.getMaxWidth()/2);
@@ -373,7 +382,7 @@ public class ChatApp extends Application {
 
         // 添加通知按钮
         Button bellButton = new Button();
-        ImageView bellIcon = new ImageView(new Image("file:icons/bell.png"));
+        bellIcon = new ImageView(new Image("file:icons/bell.png"));
         bellIcon.setFitWidth(25);
         bellIcon.setFitHeight(25);
         bellButton.setGraphic(bellIcon);
@@ -404,7 +413,7 @@ public class ChatApp extends Application {
         rightBox.getChildren().add(minButton);
 
         // 添加关闭按钮
-        Button closeButton = createCloseButton(primaryStage);
+        Button closeButton = createCloseButton(primaryStage,true);
         rightBox.getChildren().add(closeButton);
 
         titleBar.getChildren().add(rightBox);
@@ -418,9 +427,25 @@ public class ChatApp extends Application {
 
 
     public static void updateSilderBar(){
-        System.out.println("更新请求框成功");
+        requestListView.getItems().clear();  //清除之前的记录
         requestListView.getItems().addAll(requestUsers);
-        configureUserListView(requestListView, false);
+        boolean flag=false;
+        for(RequestFriend record: requestUsers){
+            if(Objects.equals(record.getRequestStatus(), RequestStatus.PENDING.getDescription())){
+                flag=true;
+                break;
+            }
+        }
+        if(flag){
+            bellIcon.setImage(new Image("file:icons/redpointbell.png"));
+        }
+        else{
+            bellIcon.setImage(new Image("file:icons/bell.png"));
+        }
+        isBellRedPoint=flag;
+
+        configURequestListView(requestListView);
+        System.out.println("更新请求框成功");
     }
 
     public static void main(String[] args) {

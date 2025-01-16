@@ -2,6 +2,11 @@ package com.example.chatui.basic;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.example.chatui.MQChat.GetFriendRequestClient;
+import com.example.chatui.aboutFriend.RequestFriend;
+import com.example.chatui.aboutFriend.RequestFriendCell;
+import com.example.chatui.aboutFriend.SearchFriend;
+import com.example.chatui.aboutFriend.SearchFriendCell;
 import com.example.chatui.aboutUser.User;
 import com.example.chatui.aboutUser.UserCell;
 import javafx.animation.TranslateTransition;
@@ -15,8 +20,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.LinearGradient;
@@ -56,7 +59,7 @@ public class LoginBasicTool {
     private static double xOffset = 0;
     private static double yOffset = 0;
 
-    private static List<User> searchFriends = new ArrayList<>();
+    private static List<SearchFriend> searchedFriends = new ArrayList<>();
     private LoginBasicTool() {
     }
      private static String toRgbString(Paint paint) {
@@ -90,7 +93,7 @@ public class LoginBasicTool {
         titleBar.setAlignment(Pos.CENTER_RIGHT);
 
         Button minButton=createMinimizeButton(primaryStage);
-        Button closeButton=createCloseButton(primaryStage);
+        Button closeButton=createCloseButton(primaryStage,false);
 
         titleBar.getChildren().addAll(minButton, closeButton);
         // 添加鼠标拖动事件监听器
@@ -104,10 +107,14 @@ public class LoginBasicTool {
 
     public static void configureBellButton(Button bellButton, ImageView bellIcon) {
         bellButton.setOnMouseEntered(event -> {
-            bellIcon.setImage(new Image("file:icons/changedbell.png"));
+            if(!isBellRedPoint){
+                bellIcon.setImage(new Image("file:icons/changedbell.png"));
+            }
         });
         bellButton.setOnMouseExited(event -> {
-            bellIcon.setImage(new Image("file:icons/bell.png"));
+            if(!isBellRedPoint){
+                bellIcon.setImage(new Image("file:icons/bell.png"));
+            }
         });
     }
 
@@ -137,14 +144,20 @@ public class LoginBasicTool {
         return minButton;
     }
 
-    public static Button createCloseButton(Stage primaryStage) {
+    public static Button createCloseButton(Stage primaryStage,boolean isCloseConnection) {
         ImageView closeIcon = new ImageView(new Image("file:icons/close-bold.png"));
         closeIcon.setFitWidth(20);
         closeIcon.setFitHeight(20);
         Button closeButton = new Button();
         closeButton.setGraphic(closeIcon);
         closeButton.setStyle("-fx-background-color: transparent;");
-        closeButton.setOnAction(e -> primaryStage.close());
+        closeButton.setOnAction(e -> {
+            primaryStage.close();
+            if(isCloseConnection){
+                sendFriendRequestClient.close();
+                getFriendRequestClient.close();
+            }
+        });
         closeButton.setOnMouseEntered(e -> {
             closeButton.setStyle("-fx-background-color: rgba(255,255,255,0.5)");
         });
@@ -154,7 +167,7 @@ public class LoginBasicTool {
         return closeButton;
     }
 
-    private static String defaultImage ="file:avatar/default.png";
+    private static final String defaultImage ="file:avatar/default.png";
     public static ImageView getAvatar(ImageView avatar,String filename, int radius){
         if(avatar==null){
             avatar=new ImageView();
@@ -321,7 +334,7 @@ public class LoginBasicTool {
 
     public static void showSearchDialog(Stage primaryStage) {
         // 创建搜索框
-        searchFriends=new ArrayList<>(); //清空搜索的好友
+        searchedFriends=new ArrayList<>(); //清空搜索的好友
         Stage dialog = new Stage();
         HBox searchPane=new HBox(10);
         searchPane.setMaxWidth(700);
@@ -359,18 +372,18 @@ public class LoginBasicTool {
         searchFiledAndClear.getChildren().addAll(searchField,clearButton);
 
         //添加关闭按钮
-        Button closeButton = createCloseButton(dialog);
+        Button closeButton = createCloseButton(dialog,false);
         //完成上方搜索面板
         searchPane.getChildren().addAll(searchIcon,searchFiledAndClear,closeButton);
 
         //下方搜索得到的用户列表
-        ListView<User> searchedFriendsListView=new ListView<>();
-        searchedFriendsListView.setCellFactory(listView -> new UserCell());
+        ListView<SearchFriend> searchedFriendsListView=new ListView<>();
+        searchedFriendsListView.setCellFactory(listView -> new SearchFriendCell());
         double cellHeight=90;
 
-        searchedFriendsListView.setPrefHeight(searchFriends.size()*cellHeight);
-        searchedFriendsListView.getItems().addAll(searchFriends);
-        searchedFriendsListView.setCellFactory(param -> new UserCell()); // 设置自定义 Cell
+        searchedFriendsListView.setPrefHeight(searchedFriends.size()*cellHeight);
+        searchedFriendsListView.getItems().addAll(searchedFriends);
+        searchedFriendsListView.setCellFactory(param -> new SearchFriendCell()); // 设置自定义 Cell
         searchedFriendsListView.setStyle("-fx-background-color: transparent");
 
         //添加到整体布局中
@@ -397,9 +410,9 @@ public class LoginBasicTool {
             // 根据文本框内容控制清除按钮的可见性
             clearButton.setVisible(!newValue.isEmpty());
             String searchusername=searchField.getText();
-            List<User> friends = searchFriends(searchusername);
-            if (friends != null) {
-                showSearchResults(friends, searchedFriendsListView);
+            searchedFriends=searchFriends(searchusername);
+            if (searchedFriends != null) {
+                showSearchResults(searchedFriends, searchedFriendsListView);
             }
         });
 
@@ -416,10 +429,9 @@ public class LoginBasicTool {
 
     }
 
-    //TODO:搜索好友功能
-    private static List<User> searchFriends(String username) {
+    private static List<SearchFriend> searchFriends(String username) {
         if(Objects.equals(username, "")){
-            return new ArrayList<User>();
+            return new ArrayList<>();
         }
         // 示例返回值，实际需要根据你的逻辑来实现
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
@@ -428,8 +440,6 @@ public class LoginBasicTool {
             HttpResponse response = httpClient.execute(get);
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == 200) {
-
-
                 JSONObject jsonObject=getJsonObject(response);
                 int code=jsonObject.getIntValue("code");
                 //失败
@@ -438,14 +448,15 @@ public class LoginBasicTool {
                     return null;
                 }
                 JSONArray dataArray=jsonObject.getJSONArray("data");
-                List<User> searchFriends=new ArrayList<>();
+                List<SearchFriend> searchFriends=new ArrayList<>();
                 for(int i=0;i<dataArray.size();i++){
-                    User friend=new User();
+                    SearchFriend friend=new SearchFriend();
                     JSONObject userObj=dataArray.getJSONObject(i);
-                    String friendname=userObj.getString("username");
-                    friend.setUsername(friendname);
                     String avatarBase64=userObj.getString("avatar");
                     friend.setAvatar(avatarBae64ToImage(avatarBase64));
+                    String status=userObj.getString("requestStatus");
+                    friend.setRequestStatus(status);
+                    friend.setUsername(userObj.getString("username"));
                     searchFriends.add(friend);
                 }
                 return searchFriends;
@@ -455,18 +466,15 @@ public class LoginBasicTool {
                 return null;
             }
         } catch (IOException e) {
-            e.printStackTrace();
             System.err.println("搜索好友失败:" + e.getMessage());
             return null;
         }
     }
 
-    private static void showSearchResults(List<User> friends,ListView<User> listView) {
+    private static void showSearchResults(List<SearchFriend> friends,ListView<SearchFriend> listView) {
         listView.getItems().clear();
-        listView.setStyle("-fx-background-color: transparent");
         listView.getItems().addAll(friends);
-        configureUserListView(listView,true);
-
+        configureSearchUserListView(listView);
     }
 
 
@@ -476,42 +484,114 @@ public class LoginBasicTool {
         return avatar;
     }
 
-    public static void configureUserListView(ListView<User> listView, boolean showAddFriendButton) {
-        listView.setPrefHeight(800);
+    public static  void configureUserListView(ListView<User> listView) {
         listView.setCellFactory(param -> {
             UserCell cell = new UserCell();
-            if (showAddFriendButton) {
-                cell.leftBox.setPrefWidth(200);
-                cell.rightBox.setPrefWidth(450);
-                cell.addFriendButton.setFocusTraversable(false);
-                cell.addFriendButton.getStyleClass().add("add-friend-button");
-                cell.rightBox.setAlignment(Pos.CENTER_RIGHT);
-                cell.rightBox.getChildren().add(cell.addFriendButton);
-                cell.hBox.getChildren().addAll(cell.leftBox, cell.rightBox);
-            }
-            else{
-                cell.hBox.getChildren().add(cell.leftBox);
-            }
+            cell.hBox.getChildren().add(cell.leftBox);
             return cell;
         });
-        listView.setStyle("-fx-background-color: transparent");
-
-        // 鼠标进入事件
-        listView.setOnMouseEntered(event -> {
-            listView.lookup(".scroll-bar:vertical").setVisible(true); // 显示垂直滚动条
-        });
-
-        // 鼠标退出事件
-        listView.setOnMouseExited(event -> {
-            listView.lookup(".scroll-bar:vertical").setVisible(false); // 隐藏垂直滚动条
-        });
-        // 选中事件
+        //TODO: 选中事件
         listView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             chosenUser = newValue; // 更新选中的用户
             updataChatName();
         });
+        basicConfigListView(listView);
+    }
+
+
+    public static  void configureSearchUserListView(ListView<SearchFriend> listView) {
+        listView.setCellFactory(param -> {
+            SearchFriendCell cell=new SearchFriendCell();
+            cell.hBox.getChildren().addAll(cell.leftBox,cell.rightBox);
+            return cell;
+        });
+        basicConfigListView(listView);
+        //TODO:选中事件
+        // 选中事件
+        listView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            chosenSearchFriend = newValue; // 更新选中的用户
+//            updataChatName();
+        });
+    }
+
+    public static  void configURequestListView(ListView<RequestFriend> listView) {
+        listView.setCellFactory(param -> {
+            RequestFriendCell cell = new RequestFriendCell();
+            cell.hBox.getChildren().addAll(cell.leftBox,cell.rightBox);
+            return cell;
+        });
+        basicConfigListView(listView);
+        //TODO:选中事件
+        listView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            chosenRequestFriend = newValue; // 更新选中的用户
+//            updataChatName();
+        });
+    }
+
+
+
+
+
+    private static <E> void basicConfigListView(ListView<E> userListView){
+        userListView.setStyle("-fx-background-color: transparent");
+        userListView.setPrefHeight(800);
+        // 鼠标进入事件
+        userListView.setOnMouseEntered(event -> {
+            userListView.lookup(".scroll-bar:vertical").setVisible(true); // 显示垂直滚动条
+        });
+
+        // 鼠标退出事件
+        userListView.setOnMouseExited(event -> {
+            userListView.lookup(".scroll-bar:vertical").setVisible(false); // 隐藏垂直滚动条
+        });
+    }
+
+
+
+    public static List<RequestFriend> loadRequest(){
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet get = new HttpGet(userUrl+"/"+nowUsername+"/getRequests");
+            // 执行请求
+            HttpResponse response = httpClient.execute(get);
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == 200) {
+                JSONObject jsonObject=getJsonObject(response);
+                int code=jsonObject.getIntValue("code");
+                //失败
+                if(code==0){
+                    System.out.println("获取好友请求记录失败");
+                    return null;
+                }
+                JSONArray dataArray=jsonObject.getJSONArray("data");
+                List<RequestFriend> requestFriends=new ArrayList<>();
+                for(int i=0;i<dataArray.size();i++){
+                    RequestFriend requestRecord=getRequestFriend( dataArray.getJSONObject(i));
+                    requestFriends.add(requestRecord);
+                }
+                return requestFriends;
+            }
+            else {
+                System.err.println("获取好友请求记录失败,响应代码：" + statusCode);
+                return null;
+            }
+        } catch (IOException e) {
+            System.err.println("获取好友请求记录失败:" + e.getMessage());
+            return null;
+        }
 
     }
+
+    public static RequestFriend getRequestFriend(JSONObject userObj){
+        RequestFriend requestRecord=new RequestFriend();
+        String avatarBase64=userObj.getString("avatar");
+        requestRecord.setAvatar(avatarBae64ToImage(avatarBase64));
+        String status=userObj.getString("requestStatus");
+        requestRecord.setRequestStatus(status);
+        requestRecord.setUsername(userObj.getString("username"));
+        requestRecord.setRequestTime(userObj.getDate("requestTime"));
+        return requestRecord;
+    }
+
 
 
     public static void updataChatName() {
@@ -522,15 +602,6 @@ public class LoginBasicTool {
         else{
             chatname.setText(chosenUser.getName());
         }
-    }
-
-    public static boolean isFriendWithCurrentUser(User user){
-        for(User friend: friendsList){
-            if(user.getName().equals(friend.getName())){
-                return true;
-            }
-        }
-        return false;
     }
 
 
