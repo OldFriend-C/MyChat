@@ -18,6 +18,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -41,7 +42,7 @@ import java.util.stream.Collectors;
 import static com.example.chatui.basic.LoginBasicTool.*;
 
 public class LoginApp extends Application {
-    private static final String hostIP="192.168.1.108";
+    private static final String hostIP="localhost";
     private static final String port="8888";
 
     private VBox vbox; // 将 vbox 设为类变量
@@ -56,6 +57,8 @@ public class LoginApp extends Application {
     public static String nowPassword;
     public static GetFriendRequestClient getFriendRequestClient;
     public static SendFriendRequestClient sendFriendRequestClient;
+    private PasswordField passWordDarkField=new PasswordField();
+    private TextField passWordBrightFiled=new TextField();
 
     @Override
     public void start(Stage primaryStage) {
@@ -100,12 +103,10 @@ public class LoginApp extends Application {
         usernameErrorLabel.setVisible(false);
         vbox.getChildren().add(usernameErrorLabel);
 
+        HBox passwordField=creatPassWordField();
 
-        PasswordField passwordField = new PasswordField();
-        passwordField.setMaxWidth(250);
-        passwordField.setPromptText("密码");
-        passwordField.setStyle("-fx-background-radius: 15; -fx-font-size: 14px;");
         vbox.getChildren().add(passwordField);
+
 
 
         Label passwordErrorLabel = new Label();
@@ -130,7 +131,7 @@ public class LoginApp extends Application {
         // 登录按钮事件
         loginButton.setOnAction(event -> {
             String username = userNameField.getText();
-            String password = passwordField.getText();
+            String password = passWordDarkField.getText();
 
             if (isValidAccountNumber(username) && isValidPassword(password)) {
                 boolean result=sendLoginData(username, password);
@@ -392,6 +393,64 @@ public class LoginApp extends Application {
         ChatApp chatApp = new ChatApp();
         chatApp.start(new Stage());
     }
+
+    private HBox creatPassWordField(){
+        HBox hBox = new HBox();
+        hBox.setStyle("-fx-background-radius: 15;-fx-border-radius: 15;-fx-border-width: 2px;-fx-border-color: #E2E2E2;-fx-background-color: #FFFFFF;");
+        hBox.setMaxWidth(250);
+        StackPane passwordPane=new StackPane();
+        //设置明暗文切换
+        passWordDarkField.setMaxWidth(240);
+        passWordDarkField.setPromptText("密码");
+        passWordDarkField.setStyle("-fx-background-color: transparent;-fx-font-size: 14px");
+        passWordBrightFiled = new TextField();
+        passWordBrightFiled.setMaxWidth(240);
+        passWordBrightFiled.setPromptText("密码");
+        passWordBrightFiled.setStyle("-fx-background-color: transparent;-fx-font-size: 14px");
+        passWordBrightFiled.setVisible(false);
+        passWordDarkField.textProperty().addListener((observable, oldValue, newValue)->{
+            passWordBrightFiled.setText(newValue);
+        });
+        passWordBrightFiled.textProperty().addListener((observable, oldValue, newValue)->{
+            passWordDarkField.setText(newValue);
+        });
+        passWordDarkField.focusedProperty().addListener((observable, oldValue, newValue)->{
+            if(newValue){
+                hBox.setStyle("-fx-background-radius: 15;-fx-border-radius: 15;-fx-border-width: 2px;-fx-border-color: #26ACD9;-fx-background-color: #FFFFFF;");
+            }
+            else{
+                hBox.setStyle("-fx-background-radius: 15;-fx-border-radius: 15;-fx-border-width: 2px;-fx-border-color: #E2E2E2;-fx-background-color: #FFFFFF;");
+            }
+        });
+
+
+        passwordPane.getChildren().addAll(passWordBrightFiled,passWordDarkField);
+        //设置按钮
+        Button eyebutton=new Button();
+        ImageView openEyeIcon = new ImageView(new Image("file:icons/closeye.png"));
+        openEyeIcon.setFitWidth(20);
+        openEyeIcon.setFitHeight(20);
+        eyebutton.setGraphic(openEyeIcon);
+        eyebutton.setStyle("-fx-background-color: transparent;");
+        eyebutton.setOnAction(e -> {
+            if (passWordBrightFiled.isVisible()) {
+                openEyeIcon.setImage(new Image("file:icons/closeye.png"));
+                passWordBrightFiled.setVisible(false);
+                passWordDarkField.setText(passWordBrightFiled.getText());
+                passWordDarkField.setVisible(true);
+            } else {
+                passWordBrightFiled.setVisible(true);
+                openEyeIcon.setImage(new Image("file:icons/openeye.png"));
+                passWordBrightFiled.setText(passWordDarkField.getText());
+                passWordDarkField.setVisible(false);
+            }
+        });
+
+        hBox.getChildren().addAll(passwordPane,eyebutton);
+        return hBox;
+    }
+
+
 
     public static void main(String[] args) {
         launch(args);

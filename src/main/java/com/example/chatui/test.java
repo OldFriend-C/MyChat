@@ -1,72 +1,64 @@
 package com.example.chatui;
 
-import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 public class test extends Application {
 
-    private StackPane rootPane;
-    private VBox sidebarPane;
-    private boolean isSidebarVisible = false;
+    private boolean isPasswordVisible = false; // 控制密码显示状态
 
     @Override
     public void start(Stage primaryStage) {
-        // 创建根 StackPane
-        rootPane = new StackPane();
+        primaryStage.setTitle("密码框明文暗文切换");
 
-        // 创建主内容区域
-        BorderPane mainPane = new BorderPane();
-        Label mainLabel = new Label("Main Content");
-        mainPane.setCenter(mainLabel);
+        VBox vbox = new VBox(10);
+        vbox.setPadding(new javafx.geometry.Insets(20));
 
-        // 创建侧边栏窗口
-        sidebarPane = new VBox();
-        sidebarPane.setStyle("-fx-background-color: #d22222; -fx-padding: 20px;");
-        sidebarPane.getChildren().addAll(
-                new Label("Sidebar Content"),
-                new Button("Option 1"),
-                new Button("Option 2"),
-                new Button("Close")
-        );
-        sidebarPane.setMaxWidth(200);
+        // 用户名框
+        TextField userNameField = new TextField();
+        userNameField.setPromptText("用户名");
+        vbox.getChildren().add(userNameField);
 
-        // 将主内容区域和侧边栏窗口添加到 StackPane 中
-        rootPane.getChildren().addAll(sidebarPane, mainPane);
+        // 密码框和按钮
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("密码");
 
-        // 设置侧边栏窗口的初始位置
-        sidebarPane.setTranslateX(-400);
+        TextField passwordTextField = new TextField();
+        passwordTextField.setPromptText("密码");
+        passwordTextField.setVisible(false); // 初始时隐藏明文框
 
-        // 添加显示/隐藏侧边栏的交互逻辑
-        Button toggleSidebarButton = new Button("Toggle Sidebar");
-        toggleSidebarButton.setOnAction(event -> toggleSidebar());
-        HBox bottomPane = new HBox(toggleSidebarButton);
-        mainPane.setBottom(bottomPane);
+        Button toggleButton = new Button("显示");
+        toggleButton.setOnAction(event -> {
+            isPasswordVisible = !isPasswordVisible; // 切换状态
+            if (isPasswordVisible) {
+                passwordTextField.setText(passwordField.getText()); // 复制密码
+                passwordField.setVisible(false); // 隐藏密码框
+                passwordTextField.setVisible(true); // 显示明文框
+                toggleButton.setText("隐藏"); // 更新按钮文本
+            } else {
+                passwordField.setText(passwordTextField.getText()); // 复制明文
+                passwordField.setVisible(true); // 显示密码框
+                passwordTextField.setVisible(false); // 隐藏明文框
+                toggleButton.setText("显示"); // 更新按钮文本
+            }
+        });
 
-        // 创建场景并显示
-        Scene scene = new Scene(rootPane, 600, 400);
+        HBox passwordBox = new HBox(passwordField, passwordTextField, toggleButton);
+        vbox.getChildren().add(passwordBox);
+
+        // 登录按钮
+        Button loginButton = new Button("登录");
+        vbox.getChildren().add(loginButton);
+
+        Scene scene = new Scene(vbox, 300, 200);
         primaryStage.setScene(scene);
-        primaryStage.setTitle("Sidebar Popup Example");
         primaryStage.show();
-    }
-
-    private void toggleSidebar() {
-        TranslateTransition transition = new TranslateTransition(Duration.millis(300), sidebarPane);
-        if (isSidebarVisible) {
-            transition.setToX(-300);
-        } else {
-            transition.setToX(-250);
-        }
-        transition.play();
-        isSidebarVisible = !isSidebarVisible;
     }
 
     public static void main(String[] args) {

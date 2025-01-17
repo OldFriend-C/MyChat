@@ -14,7 +14,7 @@ import static com.example.chatui.ChatApp.updateSilderBar;
 import static com.example.chatui.basic.LoginBasicTool.loadRequest;
 
 public class GetFriendRequestClient {
-    private static final String HOST = "192.168.1.108"; // RabbitMQ 服务的主机
+    private static final String HOST = "localhost"; // RabbitMQ 服务的主机
     private static final int PORT = 5672; // RabbitMQ 默认端口
     private static final String USERNAME = "remote";
     private static final String PASSWORD = "123456"; // RabbitMQ 密码

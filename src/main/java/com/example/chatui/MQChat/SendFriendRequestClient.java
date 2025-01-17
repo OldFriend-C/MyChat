@@ -14,7 +14,7 @@ import java.util.concurrent.TimeoutException;
 
 public class SendFriendRequestClient {
     private static final String QUEUE_NAME = "friendRequest";
-    private static final String HOST="192.168.1.108";
+    private static final String HOST="localhost";
     private static final int PORT=5672;
     private static final String USERNAME="remote";
     private static final String PASSWORD="123456";
