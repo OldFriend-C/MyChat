@@ -6,6 +6,7 @@ public enum RequestStatus {
     REQUESTED("Requested"),
     ACCEPTED("Accepted"),
     DECLINED("Declined"),
+    REJECT("Reject"),
     REMOVED("Removed"),
     IRRELEVANT("Irrelevant"),
     PENDING("Pending");

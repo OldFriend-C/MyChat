@@ -29,6 +29,8 @@ public class SearchFriendCell extends ListCell<SearchFriend> {
     private static final String acceptedDescription="Accepted";
     private static final String requestedDescription="Requested";
     private static final String pendingDescription="Pending";
+    private static final String rejectDescription ="Reject";
+    private static final String  declinedDescription="Declined";
 
     public Button addFriendButton = new Button("添加好友");
 
@@ -63,24 +65,10 @@ public class SearchFriendCell extends ListCell<SearchFriend> {
             setGraphic(null);
         } else {
             String relation=searchFriend.getRequestStatus();
-            System.out.println(relation);
             rightBox.getChildren().clear();
             switch (relation) {
-                case (irrelevantDescription) -> {
-                    addFriendButton.setOnMouseClicked(e -> {
-                        sendFriendRequestClient.sendFriendRequest(nowUsername, searchFriend.getUsername(), RequestStatus.REQUESTED); //发送好友请求
-                        RequestFriend requestRecord=new RequestFriend();
-                        requestRecord.setUsername(searchFriend.getUsername());
-                        requestRecord.setRequestStatus(RequestStatus.REQUESTED.getDescription());
-                        requestRecord.setAvatar(searchFriend.getAvatar());
-                        requestRecord.setRequestTime(new Date());
-                        requestUsers.add(requestRecord);
-                        updateSilderBar();
-                        //将按钮改为请求已发送的文字，并且让按钮不可按
-                        addFriendButton.setText("请求已发送");
-                        addFriendButton.setDisable(true);
-                    });
-                    rightBox.getChildren().add(addFriendButton);
+                case (irrelevantDescription), (declinedDescription), (rejectDescription) -> {
+                    setSearchFriend(searchFriend);
                 }
                 case (acceptedDescription) -> {
                     addFriendButton.setText("已成为好友");
@@ -116,6 +104,15 @@ public class SearchFriendCell extends ListCell<SearchFriend> {
                         "-fx-background-radius: 15px;");
             }
         }
+    }
+    public void setSearchFriend(SearchFriend searchFriend){
+        addFriendButton.setOnMouseClicked(e -> {
+            sendFriendRequestClient.sendFriendRequest(nowUsername, searchFriend.getUsername(), RequestStatus.REQUESTED,searchFriend.getAvatar()); //发送好友请求
+            //将按钮改为请求已发送的文字，并且让按钮不可按
+            addFriendButton.setText("请求已发送");
+            addFriendButton.setDisable(true);
+        });
+        rightBox.getChildren().add(addFriendButton);
     }
 
 

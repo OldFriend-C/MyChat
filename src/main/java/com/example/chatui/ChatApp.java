@@ -1,7 +1,6 @@
 package com.example.chatui;
 
-import com.example.chatui.aboutFriend.RequestFriend;
-import com.example.chatui.aboutFriend.RequestFriendCell;
+import com.example.chatui.aboutFriend.RequestRecord;
 import com.example.chatui.aboutFriend.SearchFriend;
 import com.example.chatui.aboutMessage.Message;
 import com.example.chatui.aboutMessage.MessageCell;
@@ -39,7 +38,7 @@ public class ChatApp extends Application {
 
     public static User chosenUser;
     public static SearchFriend chosenSearchFriend;
-    public static RequestFriend chosenRequestFriend;
+    public static RequestRecord chosenRequestRecord;
     private static VBox functionPlace=new VBox();
     private static VBox contentPlace=new VBox();
     public static VBox chatPlace=new VBox();
@@ -52,10 +51,10 @@ public class ChatApp extends Application {
     private static final double SCENEWIDTH=1200;
     private static final double SCENHEIGHT=800;
 
-    public static List<RequestFriend> requestUsers=new ArrayList<>();
+    public static List<RequestRecord> requestUsers=new ArrayList<>();
 
     private static ListView<User> friendsListView=new ListView<>();
-    private static ListView<RequestFriend> requestListView=new ListView<>();
+    private static ListView<RequestRecord> requestListView=new ListView<>();
 
     private static ImageView bellIcon=new ImageView();
     public static boolean isBellRedPoint;
@@ -334,7 +333,7 @@ public class ChatApp extends Application {
 
 
     private void toggleSidebar(int status) {
-        chosenRequestFriend=null;
+        chosenRequestRecord =null;
         TranslateTransition transition = new TranslateTransition(Duration.millis(300), sliderbar);
         if(isSidebarVisible){
             transition.setToX(SCENEWIDTH/2+sliderbar.getMaxWidth()/2);
@@ -430,7 +429,7 @@ public class ChatApp extends Application {
         requestListView.getItems().clear();  //清除之前的记录
         requestListView.getItems().addAll(requestUsers);
         boolean flag=false;
-        for(RequestFriend record: requestUsers){
+        for(RequestRecord record: requestUsers){
             if(Objects.equals(record.getRequestStatus(), RequestStatus.PENDING.getDescription())){
                 flag=true;
                 break;
@@ -446,6 +445,11 @@ public class ChatApp extends Application {
 
         configURequestListView(requestListView);
         System.out.println("更新请求框成功");
+    }
+
+    public static void updateFriendList(){
+        friendsListView.getItems().clear();  //清除之前的记录
+        friendsListView.getItems().addAll(friendsList);
     }
 
     public static void main(String[] args) {

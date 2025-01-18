@@ -13,6 +13,8 @@ module com.example.chatui {
     requires lombok;
     requires com.rabbitmq.client;
     requires java.sql;
+    requires java.desktop;
+    requires javafx.swing;
 
     opens com.example.chatui to javafx.fxml;
     exports com.example.chatui.aboutMessage;

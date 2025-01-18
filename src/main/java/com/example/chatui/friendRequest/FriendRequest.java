@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class GetFriendRequest {
+public class FriendRequest {
     private MessageType messageType;
     private String fromUserUsername;
     private String toUserUsername;

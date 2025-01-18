@@ -2,14 +2,15 @@ package com.example.chatui.basic;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.example.chatui.MQChat.GetFriendRequestClient;
-import com.example.chatui.aboutFriend.RequestFriend;
-import com.example.chatui.aboutFriend.RequestFriendCell;
+import com.example.chatui.aboutFriend.RequestRecord;
+import com.example.chatui.aboutFriend.RequestRecordCell;
 import com.example.chatui.aboutFriend.SearchFriend;
 import com.example.chatui.aboutFriend.SearchFriendCell;
 import com.example.chatui.aboutUser.User;
 import com.example.chatui.aboutUser.UserCell;
+import com.example.chatui.friendRequest.FriendRequest;
 import javafx.animation.TranslateTransition;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -40,10 +41,10 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -54,6 +55,8 @@ import java.util.stream.Collectors;
 
 import static com.example.chatui.ChatApp.*;
 import static com.example.chatui.LoginApp.*;
+import static javafx.embed.swing.SwingFXUtils.fromFXImage;
+import static javax.imageio.ImageIO.write;
 
 public class LoginBasicTool {
     private static double xOffset = 0;
@@ -514,16 +517,16 @@ public class LoginBasicTool {
         });
     }
 
-    public static  void configURequestListView(ListView<RequestFriend> listView) {
+    public static  void configURequestListView(ListView<RequestRecord> listView) {
         listView.setCellFactory(param -> {
-            RequestFriendCell cell = new RequestFriendCell();
+            RequestRecordCell cell = new RequestRecordCell();
             cell.hBox.getChildren().addAll(cell.leftBox,cell.rightBox);
             return cell;
         });
         basicConfigListView(listView);
         //TODO:选中事件
         listView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            chosenRequestFriend = newValue; // 更新选中的用户
+            chosenRequestRecord = newValue; // 更新选中的用户
 //            updataChatName();
         });
     }
@@ -548,7 +551,7 @@ public class LoginBasicTool {
 
 
 
-    public static List<RequestFriend> loadRequest(){
+    public static List<RequestRecord> loadRequest(){
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpGet get = new HttpGet(userUrl+"/"+nowUsername+"/getRequests");
             // 执行请求
@@ -563,12 +566,12 @@ public class LoginBasicTool {
                     return null;
                 }
                 JSONArray dataArray=jsonObject.getJSONArray("data");
-                List<RequestFriend> requestFriends=new ArrayList<>();
+                List<RequestRecord> requestRecords =new ArrayList<>();
                 for(int i=0;i<dataArray.size();i++){
-                    RequestFriend requestRecord=getRequestFriend( dataArray.getJSONObject(i));
-                    requestFriends.add(requestRecord);
+                    RequestRecord requestRecord=getRequestFriend( dataArray.getJSONObject(i));
+                    requestRecords.add(requestRecord);
                 }
-                return requestFriends;
+                return requestRecords;
             }
             else {
                 System.err.println("获取好友请求记录失败,响应代码：" + statusCode);
@@ -581,8 +584,8 @@ public class LoginBasicTool {
 
     }
 
-    public static RequestFriend getRequestFriend(JSONObject userObj){
-        RequestFriend requestRecord=new RequestFriend();
+    public static RequestRecord getRequestFriend(JSONObject userObj){
+        RequestRecord requestRecord=new RequestRecord();
         String avatarBase64=userObj.getString("avatar");
         requestRecord.setAvatar(avatarBae64ToImage(avatarBase64));
         String status=userObj.getString("requestStatus");
@@ -603,6 +606,46 @@ public class LoginBasicTool {
             chatname.setText(chosenUser.getName());
         }
     }
+
+
+    public static void processFriendList(RequestRecord requestRecord){
+        User newfriend=new User();
+        newfriend.setUsername(requestRecord.getUsername());
+        newfriend.setAvatar(requestRecord.getAvatar());
+        boolean flag=false;
+        for(User user: friendsList){
+            if(Objects.equals(user.getName(), requestRecord.getUsername())){
+                flag=true;
+                break;
+            }
+        }
+        if(flag){
+            System.out.println("Friend already exists, ignore the request.");
+            return;
+        }
+        friendsList.add(newfriend);
+        updateFriendList();
+    }
+
+    public static void processFriendList(FriendRequest requestRecord,Image avatar){
+        User newfriend=new User();
+        newfriend.setUsername(requestRecord.getToUserUsername());
+        newfriend.setAvatar(avatar);
+        boolean flag=false;
+        for(User user: friendsList){
+            if(Objects.equals(user.getName(), requestRecord.getToUserUsername())){
+                flag=true;
+                break;
+            }
+        }
+        if(flag){
+            System.out.println("Friend already exists, ignore the request.");
+            return;
+        }
+        friendsList.add(newfriend);
+        updateFriendList();
+    }
+
 
 
 }

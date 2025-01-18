@@ -12,7 +12,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class RequestFriend extends SearchFriend{
+public class RequestRecord extends SearchFriend{
     private Date requestTime;
 
 }
