@@ -10,6 +10,11 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 
+import java.util.Objects;
+import java.util.Stack;
+
+import static com.example.chatui.LoginApp.nowUsername;
+
 public class MessageCell extends ListCell<Message> {
     private HBox hBox = new HBox(10);
     private VBox vBox = new VBox(5);
@@ -34,21 +39,24 @@ public class MessageCell extends ListCell<Message> {
             messageText.setText("");
             setGraphic(null);
         } else {
-            try {
-                avatarImageView.setImage(chatMessage.getAvatar());
+            try{
+                avatarImageView.setImage(chatMessage.getSenderUser().getAvatar());
             } catch (Exception e) {
-                avatarImageView.setImage(new Image("file:avatar/124887685_p0.png"));
+                System.out.println("发送者头像加载错误");
+                e.printStackTrace();
             }
-            sendernameText.setText(chatMessage.getSenderName());
-            messageText.setText(chatMessage.getMessage());
+            hBox.setStyle("-fx-background-color: transparent;" + "-fx-padding: 10px;");
+            sendernameText.setText(chatMessage.getSenderUser().getUsername());
+            //TODO:图片,文件信息待做
+            messageText.setText(chatMessage.getMessageContent());
             sendernameText.setStyle("-fx-font-weight: bold;");
 
             // 确保文本能够换行
             if (messageText.getLayoutBounds().getWidth() > 600) {
                 messageText.setWrappingWidth(600);
             }
-            if (sendernameText.getLayoutBounds().getWidth() > 600) {
-                sendernameText.setWrappingWidth(600);
+            if (sendernameText.getLayoutBounds().getWidth() > 200) {
+                sendernameText.setWrappingWidth(200);
             }
             messageText.setStyle("-fx-font-size: 14;");
 
@@ -60,19 +68,27 @@ public class MessageCell extends ListCell<Message> {
 
             // 使用HBox包裹消息文本以实现气泡效果
             StackPane messageContainer = new StackPane();
-            messageContainer.setStyle("-fx-background-color: #0099ff; " +
-                    "-fx-padding: 10px; " +
-                    "-fx-background-radius: 15px;" +
-                    "-fx-border-color: transparent;");
-
             messageContainer.getChildren().addAll(messageText);
-            messageContainer.setAlignment(Pos.TOP_LEFT);
-
-            hBox.setStyle("-fx-background-color: transparent;" +
-                    "-fx-padding: 10px;");
 
             info.getChildren().addAll(sendernameText,messageContainer);
-            hBox.getChildren().addAll(avatarImageView, info);
+            if(chatMessage.getSenderUser().getUsername().equals(nowUsername)){
+                info.setAlignment(Pos.CENTER_RIGHT);
+                messageContainer.setStyle("-fx-background-color: #0099ff; " +
+                        "-fx-padding: 10px; " +
+                        "-fx-background-radius: 15px;" +
+                        "-fx-border-color: transparent;");
+                hBox.setAlignment(Pos.CENTER_RIGHT);
+                hBox.getChildren().addAll(info, avatarImageView);
+            }
+            else{
+                info.setAlignment(Pos.CENTER_LEFT);
+                messageContainer.setStyle("-fx-background-color: #F2F2F2; " +
+                        "-fx-padding: 10px; " +
+                        "-fx-background-radius: 15px;" +
+                        "-fx-border-color: transparent;");
+                hBox.setAlignment(Pos.CENTER_LEFT);
+                hBox.getChildren().addAll(avatarImageView, info);
+            }
             vBox.getChildren().add(hBox);
             setGraphic(vBox);
             setStyle("-fx-background-color: transparent;");

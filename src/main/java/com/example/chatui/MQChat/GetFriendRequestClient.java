@@ -25,7 +25,7 @@ public class GetFriendRequestClient {
     private static final String USERNAME = "remote";
     private static final String PASSWORD = "123456"; // RabbitMQ 密码
     private Connection connection;
-    private static final String virtualHost="/";
+    private static final String VIRTUAL_HOST="/";
     private Channel channel;
     private final String friendRequestQueueName;
 
@@ -38,7 +38,7 @@ public class GetFriendRequestClient {
             factory.setPort(PORT);
             factory.setUsername(USERNAME);
             factory.setPassword(PASSWORD);
-            factory.setVirtualHost(virtualHost); // 虚拟主机
+            factory.setVirtualHost(VIRTUAL_HOST); // 虚拟主机
             connection = factory.newConnection();
             channel = connection.createChannel();
 

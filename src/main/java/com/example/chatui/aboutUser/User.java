@@ -1,31 +1,20 @@
 package com.example.chatui.aboutUser;
 
+import com.alibaba.fastjson.annotation.JSONType;
+import com.example.chatui.basic.UserSerializer;
 import javafx.scene.image.Image;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@JSONType(serializer = UserSerializer.class)
 public class User {
     private String username;
     private Image avatar;
 
-    public User(String username, Image avatar) {
-        this.username = username;
-        this.avatar = avatar;
-    }
-    public User(){}
-
-    public String getName() {
-        return username;
-    }
-
-    public Image getAvatar() {
-        return avatar;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setAvatar(Image avatar) {
-        this.avatar = avatar;
-    }
 }

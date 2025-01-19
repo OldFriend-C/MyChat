@@ -10,11 +10,11 @@ import java.util.Date;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
 @Setter
-public class Message {
-    private User senderUser;
-    private User receiverUser;
+@Getter
+public class SendMsg {
+    private String senderUseraname;
+    private String recieverUseraname;
     private String messageType;
     private String messageContent;
     private Date createdAt;

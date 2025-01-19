@@ -47,7 +47,7 @@ public class UserCell extends ListCell<User> {
             setGraphic(null);
         } else {
             avatarImageView.setImage(user.getAvatar());
-            nameText.setText(user.getName());
+            nameText.setText(user.getUsername());
             setGraphic(hBox);
             setStyle("-fx-background-color: transparent;"); // 确保ListCell背景透明
             if(user.equals(ChatApp.chosenUser)){

@@ -4,16 +4,14 @@ import lombok.Getter;
 
 @Getter
 public enum MessageType {
-    FRIENDREQUEST("FRIENDREQUEST"),
-    MESSAGE("MESSAGE");
+    IMAGE("Image"),
+    TEXT("Text"),
+    FILE("File");
     private final String description;
 
     MessageType(String description) {
             this.description = description;
-    }
+        }
 
-    public String getDescription() {
-        return description;
-    }
 
 }

@@ -1,6 +1,6 @@
 package com.example.chatui.friendRequest;
 
-import com.example.chatui.aboutMessage.MessageType;
+import com.example.chatui.aboutMessage.InfoType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class FriendRequest {
-    private MessageType messageType;
+    private InfoType infoType;
     private String fromUserUsername;
     private String toUserUsername;
     private RequestStatus status;

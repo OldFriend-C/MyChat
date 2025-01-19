@@ -2,8 +2,7 @@ package com.example.chatui.MQChat;
 
 import com.alibaba.fastjson.JSON;
 import com.example.chatui.aboutFriend.RequestRecord;
-import com.example.chatui.aboutMessage.MessageType;
-import com.example.chatui.basic.LoginBasicTool;
+import com.example.chatui.aboutMessage.InfoType;
 import com.example.chatui.friendRequest.FriendRequest;
 import com.example.chatui.friendRequest.RequestStatus;
 import com.rabbitmq.client.Channel;
@@ -27,6 +26,7 @@ public class SendFriendRequestClient {
     private static final int PORT=5672;
     private static final String USERNAME="remote";
     private static final String PASSWORD="123456";
+    private static final String VIRTUAL_HOST="/";
 
     private Connection connection;
     private Channel channel;
@@ -42,7 +42,7 @@ public class SendFriendRequestClient {
             factory.setUsername(USERNAME);
             factory.setPassword(PASSWORD);
             factory.setPort(PORT);
-            factory.setVirtualHost("/");
+            factory.setVirtualHost(VIRTUAL_HOST);
             connection = factory.newConnection();
             channel = connection.createChannel();
         } catch (IOException | TimeoutException e) {
@@ -53,7 +53,7 @@ public class SendFriendRequestClient {
     public void sendFriendRequest(String fromUserUsername, String toUserUsername, RequestStatus status, Image toUseravatar) {
         try {
             // 创建好友请求消息
-            FriendRequest request = new FriendRequest(MessageType.FRIENDREQUEST,fromUserUsername, toUserUsername,status);
+            FriendRequest request = new FriendRequest(InfoType.FRIENDREQUEST,fromUserUsername, toUserUsername,status);
             String requestJson = JSON.toJSONString(request);
             // 发送好友请求消息到 RabbitMQ 队列
             channel.basicPublish("", QUEUE_NAME, null, requestJson.getBytes(StandardCharsets.UTF_8));

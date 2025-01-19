@@ -1,11 +1,13 @@
 package com.example.chatui.basic;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.example.chatui.aboutFriend.RequestRecord;
 import com.example.chatui.aboutFriend.RequestRecordCell;
 import com.example.chatui.aboutFriend.SearchFriend;
 import com.example.chatui.aboutFriend.SearchFriendCell;
+import com.example.chatui.aboutMessage.Message;
 import com.example.chatui.aboutUser.User;
 import com.example.chatui.aboutUser.UserCell;
 import com.example.chatui.friendRequest.FriendRequest;
@@ -46,10 +48,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -496,9 +495,68 @@ public class LoginBasicTool {
         //TODO: 选中事件
         listView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             chosenUser = newValue; // 更新选中的用户
+            messageList= loadMessageList(newValue);
             updataChatName();
+            updateChatPane();
         });
         basicConfigListView(listView);
+    }
+
+    public static List<Message> loadMessageList(User getUser)
+    {
+        if(getUser==null){
+            return new ArrayList<>();
+        }
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet get = new HttpGet(messageUrl+nowUsername+"/"+getUser.getUsername()+"/getMessages");
+            // 执行请求
+            HttpResponse response = httpClient.execute(get);
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == 200) {
+                JSONObject jsonObject=getJsonObject(response);
+                int code=jsonObject.getIntValue("code");
+                //失败
+                if(code==0){
+                    System.out.println("未找到相应用户");
+                    return null;
+                }
+                JSONArray dataArray=jsonObject.getJSONArray("data");
+
+                return dataArray.stream().map(obj -> {
+                    JSONObject messageJson = (JSONObject) obj;
+                    // 解析发送者和接收者
+                    User senderUser = parseUser(messageJson.getJSONObject("senderUser"));
+                    User receiverUser = parseUser(messageJson.getJSONObject("receiverUser"));
+                    // 解析其他字段
+                    String messageType = messageJson.getString("messageType");
+                    String messageContent = messageJson.getString("messageContent");
+                    Date createdAt = messageJson.getDate("createdAt");
+
+                    // 创建并返回 Message 对象
+                    return new Message(senderUser, receiverUser, messageType, messageContent, createdAt);
+                }).collect(Collectors.toList());
+            }
+            else {
+                System.err.println("获取好友消息记录失败,响应代码：" + statusCode);
+                return null;
+            }
+        } catch (IOException e) {
+            System.err.println("获取好友消息记录失败:" + e.getMessage());
+            return null;
+        }
+    }
+
+    public static void updateChatPane(){
+        messageListView.getItems().clear();
+        messageListView.getItems().addAll(messageList);
+    }
+
+    private static User parseUser(JSONObject userJson) {
+        String username = userJson.getString("username");
+        String avatarBase64 = userJson.getString("avatar");
+        // 将 Base64 字符串转换为 Image 对象
+        Image avatarImage=avatarBae64ToImage(avatarBase64);
+        return new User(username, avatarImage);
     }
 
 
@@ -603,7 +661,7 @@ public class LoginBasicTool {
             chatname.setText("");
         }
         else{
-            chatname.setText(chosenUser.getName());
+            chatname.setText(chosenUser.getUsername());
         }
     }
 
@@ -614,7 +672,7 @@ public class LoginBasicTool {
         newfriend.setAvatar(requestRecord.getAvatar());
         boolean flag=false;
         for(User user: friendsList){
-            if(Objects.equals(user.getName(), requestRecord.getUsername())){
+            if(Objects.equals(user.getUsername(), requestRecord.getUsername())){
                 flag=true;
                 break;
             }
@@ -633,7 +691,7 @@ public class LoginBasicTool {
         newfriend.setAvatar(avatar);
         boolean flag=false;
         for(User user: friendsList){
-            if(Objects.equals(user.getName(), requestRecord.getToUserUsername())){
+            if(Objects.equals(user.getUsername(), requestRecord.getToUserUsername())){
                 flag=true;
                 break;
             }

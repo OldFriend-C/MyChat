@@ -2,6 +2,8 @@ package com.example.chatui;
 
 import com.alibaba.fastjson.JSONObject;
 import com.example.chatui.MQChat.GetFriendRequestClient;
+import com.example.chatui.MQChat.SendMessageClient;
+import com.example.chatui.aboutUser.User;
 import com.example.chatui.basic.LoginBasicTool;
 import com.example.chatui.MQChat.SendFriendRequestClient;
 import javafx.animation.KeyFrame;
@@ -43,12 +45,14 @@ import static com.example.chatui.basic.LoginBasicTool.*;
 
 public class LoginApp extends Application {
     private static final String hostIP="localhost";
+    public static User nowUser=new User();
     private static final String port="8888";
 
     private VBox vbox; // 将 vbox 设为类变量
     public static ImageView avatar=new ImageView(); // 头像显示区域
     public static File selectedFile=null;
     public static final String userUrl="http://"+hostIP+":"+port+"/user/";
+    public static final String messageUrl ="http://"+hostIP+":"+port+"/message/";
     public static final String LogoPath="avatar/Logo.jpeg";
     public static final String loginurl=userUrl+"login";
     public static final String registerUrl=userUrl+"register";
@@ -57,12 +61,12 @@ public class LoginApp extends Application {
     public static String nowPassword;
     public static GetFriendRequestClient getFriendRequestClient;
     public static SendFriendRequestClient sendFriendRequestClient;
+    public static SendMessageClient sendMessageClient;
     private PasswordField passWordDarkField=new PasswordField();
     private TextField passWordBrightFiled=new TextField();
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("登录界面");
         HBox titleBar = LoginBasicTool.createTitleBar(primaryStage);
         vbox = new VBox();
         vbox.setPadding(new Insets(30));
@@ -383,12 +387,13 @@ public class LoginApp extends Application {
     public void loginAndRegisterSet(String username, String password) {
         nowUsername=username;
         nowPassword=password;
+        nowUser=new User(nowUsername,avatar.getImage());
         //开启监听好友请求
         getFriendRequestClient =new GetFriendRequestClient(username);
         //开启准备发送好友请求的客户端
         sendFriendRequestClient=new SendFriendRequestClient();
         //TODO:监听好友消息
-
+        sendMessageClient=new SendMessageClient();
 
         ChatApp chatApp = new ChatApp();
         chatApp.start(new Stage());

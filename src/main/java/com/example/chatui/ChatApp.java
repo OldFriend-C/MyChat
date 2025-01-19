@@ -4,10 +4,13 @@ import com.example.chatui.aboutFriend.RequestRecord;
 import com.example.chatui.aboutFriend.SearchFriend;
 import com.example.chatui.aboutMessage.Message;
 import com.example.chatui.aboutMessage.MessageCell;
+import com.example.chatui.aboutMessage.MessageType;
+import com.example.chatui.aboutMessage.SendMsg;
 import com.example.chatui.aboutUser.User;
 import com.example.chatui.basic.LoginBasicTool;
 import com.example.chatui.basic.NoSelectionModel;
 import com.example.chatui.friendRequest.RequestStatus;
+import com.rabbitmq.client.impl.MethodArgumentReader;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -27,11 +30,11 @@ import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-import static com.example.chatui.LoginApp.LogoPath;
-import static com.example.chatui.LoginApp.avatar;
+import static com.example.chatui.LoginApp.*;
 import static com.example.chatui.basic.LoginBasicTool.*;
 
 public class ChatApp extends Application {
@@ -58,6 +61,10 @@ public class ChatApp extends Application {
 
     private static ImageView bellIcon=new ImageView();
     public static boolean isBellRedPoint;
+
+    public static ListView<Message> messageListView=new ListView<>();
+
+    public static List<Message> messageList=new ArrayList<>();
 
 
     @Override
@@ -182,26 +189,25 @@ public class ChatApp extends Application {
             chatname.setText("");
         }
         else{
-            chatname.setText(chosenUser.getName());
+            chatname.setText(chosenUser.getUsername());
         }
+
         chatname.setStyle("-fx-font-weight: bold; -fx-font-size: 12px");
         chatPlace.setAlignment(Pos.TOP_CENTER);
         chatPlace.getChildren().add(chatname);
 
+        //TODO:修改消息显示
+        messageList=loadMessageList(chosenUser);
 
-        List<Message> messages = new ArrayList<>();
-        ListView<Message> MessageListView = new ListView<>();
-        double cellHeight = 90; // 假设每个单元格的高度为 50
-        MessageListView.setPrefHeight(messages.size() * cellHeight);
-        MessageListView.setPrefHeight(650);
-        MessageListView.getItems().addAll(messages);
-        MessageListView.setCellFactory(param -> new MessageCell()); // 设置自定义 Cell
-        MessageListView.setStyle("-fx-background-color: transparent");
-        MessageListView.setEditable(false);
-        MessageListView.setSelectionModel(new NoSelectionModel<>());
+        messageListView.setPrefHeight(650);
+        messageListView.getItems().addAll(messageList);
+        messageListView.setCellFactory(param -> new MessageCell()); // 设置自定义 Cell
+        messageListView.setStyle("-fx-background-color: transparent");
+        messageListView.setEditable(false);
+        messageListView.setSelectionModel(new NoSelectionModel<>());
         //添加可以关闭侧边通知栏的功能
-        MessageListView.setOnMouseClicked(e->toggleSidebar(0));
-        chatPlace.getChildren().add(MessageListView);
+        messageListView.setOnMouseClicked(e->toggleSidebar(0));
+        chatPlace.getChildren().add(messageListView);
 
         //功能面板
         HBox functionPane=new HBox();
@@ -282,19 +288,16 @@ public class ChatApp extends Application {
         sendButton.setOnMouseClicked(event -> {
             String message = inputArea.getText().trim();
             if (!message.isEmpty()) {
-                sendMessage(inputArea,MessageListView);
-                // 滚动到最后一条消息
-                MessageListView.scrollTo(MessageListView.getItems().size() - 1);
-                event.consume();
+                SendMsg sendmsg=new SendMsg(nowUsername,chosenUser.getUsername(), MessageType.TEXT.getDescription(),message,new Date());
+                sendMessage(inputArea,sendmsg);
             }
         });
 
         inputArea.setOnKeyPressed(event -> {
+            String message = inputArea.getText().trim();
             if (event.getCode() == KeyCode.ENTER) {
-                sendMessage(inputArea,MessageListView);
-                event.consume(); // 防止换行
-                // 滚动到最后一条消息
-                MessageListView.scrollTo(MessageListView.getItems().size() - 1);
+                SendMsg sendmsg=new SendMsg(nowUsername,chosenUser.getUsername(), MessageType.TEXT.getDescription(),message,new Date());
+                sendMessage(inputArea,sendmsg);
             }
         });
 
@@ -306,13 +309,14 @@ public class ChatApp extends Application {
     }
 
 
+    //TODO: 将消息发送给服务器后端存储
 
-    private void sendMessage(TextArea inputArea,ListView<Message> messageList) {
-        String message = inputArea.getText().trim();
-        if (!message.isEmpty()) {
-            String sendMessage=inputArea.getText().trim();
-            messageList.getItems().add(new Message("you",sendMessage,avatar.getImage())); // 添加到消息列表
-            inputArea.clear(); // 清空输入框
+    private void sendMessage(TextArea inputArea,SendMsg message) {
+        if (message!=null) {
+            inputArea.clear();
+            //自动滚到最后一行
+            messageListView.scrollTo(messageListView.getItems().size()-1);
+            sendMessageClient.sendMessage(message);
         }
     }
 
@@ -450,6 +454,7 @@ public class ChatApp extends Application {
     public static void updateFriendList(){
         friendsListView.getItems().clear();  //清除之前的记录
         friendsListView.getItems().addAll(friendsList);
+        System.out.println("朋友列表更新成功");
     }
 
     public static void main(String[] args) {

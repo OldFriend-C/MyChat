@@ -1,6 +1,5 @@
 package com.example.chatui.aboutFriend;
 
-import com.example.chatui.friendRequest.RequestStatus;
 import javafx.scene.image.Image;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
