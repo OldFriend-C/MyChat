@@ -1,9 +1,12 @@
 package com.example.chatui;
 
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.ParserConfig;
 import com.example.chatui.MQChat.GetFriendRequestClient;
+import com.example.chatui.MQChat.GetMessageClient;
 import com.example.chatui.MQChat.SendMessageClient;
 import com.example.chatui.aboutUser.User;
+import com.example.chatui.aboutUser.UserDeserializer;
 import com.example.chatui.basic.LoginBasicTool;
 import com.example.chatui.MQChat.SendFriendRequestClient;
 import javafx.animation.KeyFrame;
@@ -62,6 +65,7 @@ public class LoginApp extends Application {
     public static GetFriendRequestClient getFriendRequestClient;
     public static SendFriendRequestClient sendFriendRequestClient;
     public static SendMessageClient sendMessageClient;
+    public static  GetMessageClient getMessageClient ;
     private PasswordField passWordDarkField=new PasswordField();
     private TextField passWordBrightFiled=new TextField();
 
@@ -275,7 +279,6 @@ public class LoginApp extends Application {
             // 如果需要上传头像文件，可以将其转换为 Base64 编码并加到 JSON 中
             if (avatar.getImage() != null) {
                 // 获取 ImageView 中的 Image 对象
-                Image image = avatar.getImage();
                 byte[] fileContent = Files.readAllBytes(selectedFile.toPath());
                 String encodedString = Base64.getEncoder().encodeToString(fileContent);
                 json.put("avatar", encodedString);
@@ -392,8 +395,10 @@ public class LoginApp extends Application {
         getFriendRequestClient =new GetFriendRequestClient(username);
         //开启准备发送好友请求的客户端
         sendFriendRequestClient=new SendFriendRequestClient();
-        //TODO:监听好友消息
+        //开启发送好友信息的客户端
         sendMessageClient=new SendMessageClient();
+        //开启监听好友信息的客户端
+        getMessageClient=new GetMessageClient();
 
         ChatApp chatApp = new ChatApp();
         chatApp.start(new Stage());
@@ -458,6 +463,7 @@ public class LoginApp extends Application {
 
 
     public static void main(String[] args) {
+        ParserConfig.getGlobalInstance().putDeserializer(User.class, new UserDeserializer());
         launch(args);
     }
 }

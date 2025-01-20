@@ -1,7 +1,6 @@
 package com.example.chatui.aboutUser;
 
 import com.alibaba.fastjson.annotation.JSONType;
-import com.example.chatui.basic.UserSerializer;
 import javafx.scene.image.Image;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

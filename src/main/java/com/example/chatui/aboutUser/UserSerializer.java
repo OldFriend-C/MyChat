@@ -1,4 +1,4 @@
-package com.example.chatui.basic;
+package com.example.chatui.aboutUser;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.JSONSerializer;

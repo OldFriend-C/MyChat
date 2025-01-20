@@ -2,16 +2,11 @@ package com.example.chatui.aboutMessage;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.ListCell;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
-
-import java.util.Objects;
-import java.util.Stack;
 
 import static com.example.chatui.LoginApp.nowUsername;
 
@@ -67,8 +62,9 @@ public class MessageCell extends ListCell<Message> {
             avatarImageView.setClip(avatarCircle);
 
             // 使用HBox包裹消息文本以实现气泡效果
-            StackPane messageContainer = new StackPane();
-            messageContainer.getChildren().addAll(messageText);
+            HBox messageContainer = new HBox();
+            messageContainer.setMaxWidth(messageText.getLayoutBounds().getWidth());
+            messageContainer.getChildren().add(messageText);
 
             info.getChildren().addAll(sendernameText,messageContainer);
             if(chatMessage.getSenderUser().getUsername().equals(nowUsername)){

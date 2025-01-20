@@ -13,8 +13,8 @@ import java.util.Date;
 @Setter
 @Getter
 public class SendMsg {
-    private String senderUseraname;
-    private String recieverUseraname;
+    private String senderUsername;
+    private String recieverUsername;
     private String messageType;
     private String messageContent;
     private Date createdAt;

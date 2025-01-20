@@ -13,6 +13,7 @@ import com.example.chatui.friendRequest.RequestStatus;
 import com.rabbitmq.client.impl.MethodArgumentReader;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -29,10 +30,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static com.example.chatui.LoginApp.*;
 import static com.example.chatui.basic.LoginBasicTool.*;
@@ -55,7 +53,7 @@ public class ChatApp extends Application {
     private static final double SCENHEIGHT=800;
 
     public static List<RequestRecord> requestUsers=new ArrayList<>();
-
+    public static HashMap<String,Image> saveUserAvatar=new HashMap<>();
     private static ListView<User> friendsListView=new ListView<>();
     private static ListView<RequestRecord> requestListView=new ListView<>();
 
@@ -63,6 +61,7 @@ public class ChatApp extends Application {
     public static boolean isBellRedPoint;
 
     public static ListView<Message> messageListView=new ListView<>();
+    public static HashMap<User,List<Message>> saveMessageListView= new HashMap<>();
 
     public static List<Message> messageList=new ArrayList<>();
 
@@ -165,6 +164,11 @@ public class ChatApp extends Application {
         friendsList=getFriendsList();//获取好友列表
         //创建好友列表
         friendsListView = new ListView<>();
+        //保存头像
+        for(User friend: friendsList){
+            saveUserAvatar.putIfAbsent(friend.getUsername(),friend.getAvatar());
+        }
+
         friendsListView.getItems().addAll(friendsList);
         configureUserListView(friendsListView);
 
@@ -196,8 +200,8 @@ public class ChatApp extends Application {
         chatPlace.setAlignment(Pos.TOP_CENTER);
         chatPlace.getChildren().add(chatname);
 
-        //TODO:修改消息显示
-        messageList=loadMessageList(chosenUser);
+
+
 
         messageListView.setPrefHeight(650);
         messageListView.getItems().addAll(messageList);
@@ -207,6 +211,8 @@ public class ChatApp extends Application {
         messageListView.setSelectionModel(new NoSelectionModel<>());
         //添加可以关闭侧边通知栏的功能
         messageListView.setOnMouseClicked(e->toggleSidebar(0));
+
+        showMessageList(chosenUser);
         chatPlace.getChildren().add(messageListView);
 
         //功能面板
@@ -309,14 +315,11 @@ public class ChatApp extends Application {
     }
 
 
-    //TODO: 将消息发送给服务器后端存储
-
     private void sendMessage(TextArea inputArea,SendMsg message) {
         if (message!=null) {
             inputArea.clear();
-            //自动滚到最后一行
-            messageListView.scrollTo(messageListView.getItems().size()-1);
             sendMessageClient.sendMessage(message);
+
         }
     }
 

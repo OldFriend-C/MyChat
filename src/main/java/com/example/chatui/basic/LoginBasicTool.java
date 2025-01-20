@@ -8,6 +8,7 @@ import com.example.chatui.aboutFriend.RequestRecordCell;
 import com.example.chatui.aboutFriend.SearchFriend;
 import com.example.chatui.aboutFriend.SearchFriendCell;
 import com.example.chatui.aboutMessage.Message;
+import com.example.chatui.aboutMessage.SendMsg;
 import com.example.chatui.aboutUser.User;
 import com.example.chatui.aboutUser.UserCell;
 import com.example.chatui.friendRequest.FriendRequest;
@@ -158,6 +159,8 @@ public class LoginBasicTool {
             if(isCloseConnection){
                 sendFriendRequestClient.close();
                 getFriendRequestClient.close();
+                sendMessageClient.close();
+                getMessageClient.close();
             }
         });
         closeButton.setOnMouseEntered(e -> {
@@ -495,9 +498,9 @@ public class LoginBasicTool {
         //TODO: 选中事件
         listView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             chosenUser = newValue; // 更新选中的用户
-            messageList= loadMessageList(newValue);
+            showMessageList(chosenUser);
             updataChatName();
-            updateChatPane();
+            messageListView.scrollTo(messageListView.getItems().size()-1);
         });
         basicConfigListView(listView);
     }
@@ -521,19 +524,22 @@ public class LoginBasicTool {
                     return null;
                 }
                 JSONArray dataArray=jsonObject.getJSONArray("data");
-
                 return dataArray.stream().map(obj -> {
-                    JSONObject messageJson = (JSONObject) obj;
-                    // 解析发送者和接收者
-                    User senderUser = parseUser(messageJson.getJSONObject("senderUser"));
-                    User receiverUser = parseUser(messageJson.getJSONObject("receiverUser"));
-                    // 解析其他字段
-                    String messageType = messageJson.getString("messageType");
-                    String messageContent = messageJson.getString("messageContent");
-                    Date createdAt = messageJson.getDate("createdAt");
-
-                    // 创建并返回 Message 对象
-                    return new Message(senderUser, receiverUser, messageType, messageContent, createdAt);
+                    JSONObject messageJson=(JSONObject) obj;
+                    SendMsg msg=messageJson.toJavaObject(SendMsg.class);
+                    String senderUsername=messageJson.getString("senderUsername");
+                    User senderUser=new User();
+                    User receiverUser=new User();
+                    if(senderUsername.equals(nowUsername)){
+                        senderUser=nowUser;
+                        String recieverUsername=msg.getRecieverUsername();
+                        receiverUser=new User(msg.getRecieverUsername(),saveUserAvatar.get(recieverUsername));
+                    }
+                    else{
+                        senderUser=new User(senderUsername,saveUserAvatar.get(senderUsername));
+                        receiverUser=nowUser;
+                    }
+                    return new Message(senderUser,receiverUser,msg.getMessageType(),msg.getMessageContent(),msg.getCreatedAt());
                 }).collect(Collectors.toList());
             }
             else {
@@ -544,19 +550,6 @@ public class LoginBasicTool {
             System.err.println("获取好友消息记录失败:" + e.getMessage());
             return null;
         }
-    }
-
-    public static void updateChatPane(){
-        messageListView.getItems().clear();
-        messageListView.getItems().addAll(messageList);
-    }
-
-    private static User parseUser(JSONObject userJson) {
-        String username = userJson.getString("username");
-        String avatarBase64 = userJson.getString("avatar");
-        // 将 Base64 字符串转换为 Image 对象
-        Image avatarImage=avatarBae64ToImage(avatarBase64);
-        return new User(username, avatarImage);
     }
 
 
@@ -682,6 +675,7 @@ public class LoginBasicTool {
             return;
         }
         friendsList.add(newfriend);
+        saveUserAvatar.putIfAbsent(requestRecord.getUsername(),requestRecord.getAvatar());
         updateFriendList();
     }
 
@@ -701,7 +695,36 @@ public class LoginBasicTool {
             return;
         }
         friendsList.add(newfriend);
+        saveUserAvatar.putIfAbsent(newfriend.getUsername(),avatar);
         updateFriendList();
+    }
+
+    public static void showMessageList(User chosenUser) {
+        messageListView.getItems().clear();
+        if(saveMessageListView.get(chosenUser)!=null){
+            messageListView.getItems().addAll(saveMessageListView.get(chosenUser));
+        }
+        else{
+            if(chosenUser!=null){
+                messageList=loadMessageList(chosenUser);
+                messageListView.getItems().addAll(messageList);
+                saveMessageListView.put(chosenUser,messageList);
+            }
+        }
+    }
+
+    public static void setSaveMessageList(Message message){
+        User sender=message.getSenderUser();
+        if(saveMessageListView.get(sender)!=null){
+            saveMessageListView.get(sender).add(message);
+        }
+        else{
+            messageList=loadMessageList(sender);
+            saveMessageListView.put(sender,messageList);
+        }
+        if(Objects.equals(chosenUser.getUsername(), sender.getUsername())){
+            messageListView.getItems().add(message);
+        }
     }
 
 

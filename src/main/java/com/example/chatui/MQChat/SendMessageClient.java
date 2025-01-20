@@ -58,8 +58,10 @@ public class  SendMessageClient{
 
     private void processMessage(SendMsg message) {
         Message newMessage=new Message(nowUser,chosenUser, MessageType.TEXT.getDescription(),message.getMessageContent(),message.getCreatedAt());
-        messageList.add(newMessage);
+        saveMessageListView.get(chosenUser).add(newMessage);
         messageListView.getItems().add(newMessage);
+        //自动滚到最后一行
+        messageListView.scrollTo(messageListView.getItems().size()-1);
     }
 
 
