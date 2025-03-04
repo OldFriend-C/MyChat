@@ -15,6 +15,7 @@ module com.example.chatui {
     requires java.sql;
     requires java.desktop;
     requires javafx.swing;
+    requires aliyun.sdk.oss;
 
     opens com.example.chatui to javafx.fxml;
     exports com.example.chatui.aboutMessage;
