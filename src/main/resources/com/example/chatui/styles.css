@@ -1,3 +1,16 @@
+/* @charset "UTF-8"; */
+@font-face {
+    font-family: 'OpenSansEmoji';
+    src: url('OpenSansEmoji.ttf');
+}
+
+
+
+.text-field {
+    -fx-font-family: OpenSansEmoji;
+    -fx-font-size: 32;
+}
+
 /* 整体 ListView 滚动条 */
 .scroll-bar:vertical {
     -fx-background-color: transparent; /* 背景色 */
@@ -84,4 +97,70 @@
 .friend-button:hover {
     -fx-background-color: #c9c7c7;
 }
+
+
+
+/* ---------------------------------------------------------------- */
+
+/* style.css */
+.upload-item {
+    -fx-background-color: #f0faff;
+    -fx-background-radius: 8;
+    -fx-border-color: #cce8ff;
+    -fx-border-radius: 8;
+    -fx-padding: 8px;
+}
+
+.upload-item:hover {
+    -fx-background-color: #e6f3ff;
+}
+
+.upload-complete {
+    -fx-background-color: #f0f0f0;
+    -fx-border-color: #e0e0e0;
+}
+
+.progress-bar .track {
+    -fx-background-color: #e0e0e0;
+    -fx-background-radius: 3;
+}
+
+.progress-bar .bar {
+    -fx-background-color: #00a8ff;
+    -fx-background-radius: 3;
+}
+
+.cancel-btn {
+    -fx-background-color: transparent;
+    -fx-border-radius: 5px; /* 圆角 */
+    -fx-padding: 5px 10px; /* 内边距 */
+}
+
+.cancel-btn:hover {
+    -fx-background-color: #d0d3d8;
+}
+
+
+.download-button {
+    -fx-background-color: transparent;
+    -fx-border-radius: 5px; /* 圆角 */
+    -fx-padding: 5px 10px; /* 内边距 */
+}
+
+/* hover 样式 */
+.download-button:hover {
+    -fx-background-color: #d0d3d8;
+}
+
+/* 点击样式 */
+.download-button:pressed {
+    -fx-background-color: #b8bac5;
+}
+
+/* 已下载状态样式 */
+.download-button:disabled {
+    -fx-background-color: transparent; /* 绿色背景 */
+    -fx-opacity: 1.0; /* 禁用时不降低透明度 */
+}
+
 

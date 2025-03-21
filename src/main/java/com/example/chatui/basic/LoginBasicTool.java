@@ -1,19 +1,16 @@
 package com.example.chatui.basic;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.example.chatui.aboutFriend.RequestRecord;
 import com.example.chatui.aboutFriend.RequestRecordCell;
 import com.example.chatui.aboutFriend.SearchFriend;
 import com.example.chatui.aboutFriend.SearchFriendCell;
-import com.example.chatui.aboutMessage.Message;
-import com.example.chatui.aboutMessage.SendMsg;
+import com.example.chatui.aboutMessage.*;
 import com.example.chatui.aboutUser.User;
 import com.example.chatui.aboutUser.UserCell;
 import com.example.chatui.friendRequest.FriendRequest;
 import javafx.animation.TranslateTransition;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -44,19 +41,18 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.example.chatui.ChatApp.*;
 import static com.example.chatui.LoginApp.*;
-import static javafx.embed.swing.SwingFXUtils.fromFXImage;
-import static javax.imageio.ImageIO.write;
 
 public class LoginBasicTool {
     private static double xOffset = 0;
@@ -89,6 +85,7 @@ public class LoginBasicTool {
     public static void handleMouseDragged(MouseEvent event, Stage stage) {
         stage.setX(event.getScreenX() - xOffset);
         stage.setY(event.getScreenY() - yOffset);
+
     }
     public static HBox createTitleBar(Stage primaryStage) {
         HBox titleBar = new HBox();
@@ -297,6 +294,8 @@ public class LoginBasicTool {
         }
     }
 
+
+
     public static List<User> getFriendsList() {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpGet get = new HttpGet(userUrl+nowUsername+"/friends");
@@ -320,8 +319,10 @@ public class LoginBasicTool {
                     String username = userObject.getString("username");
                     User user = new User();
                     user.setUsername(username);
-                    String avatarBase64String = userObject.getString("avatar"); // 这里获取数据部分
-                    user.setAvatar(avatarBae64ToImage(avatarBase64String));
+                    String avatarUrl= userObject.getString("avatar"); // 这里获取数据部分
+                    Image avatar=new Image(avatarUrl);
+                    user.setAvatar(avatar);
+                    saveUserAvatar.putIfAbsent(username,avatar);
                     userList.add(user);
                 }
                 return userList;
@@ -360,7 +361,7 @@ public class LoginBasicTool {
         searchField.setStyle("-fx-font-size: 14px;-fx-border-color: transparent;-fx-background-color: transparent");
         searchField.setPrefWidth(600);
         searchField.setFocusTraversable(false);
-        searchField.setPromptText("输入用户名搜索好友,按回车搜索...");
+        searchField.setPromptText("输入用户名搜索好友");
 
         //添加清空按钮
         Button clearButton = new Button();
@@ -455,10 +456,11 @@ public class LoginBasicTool {
                 JSONArray dataArray=jsonObject.getJSONArray("data");
                 List<SearchFriend> searchFriends=new ArrayList<>();
                 for(int i=0;i<dataArray.size();i++){
+
                     SearchFriend friend=new SearchFriend();
                     JSONObject userObj=dataArray.getJSONObject(i);
-                    String avatarBase64=userObj.getString("avatar");
-                    friend.setAvatar(avatarBae64ToImage(avatarBase64));
+                    String avatarUrl=userObj.getString("avatar");
+                    friend.setAvatar(new Image(avatarUrl));
                     String status=userObj.getString("requestStatus");
                     friend.setRequestStatus(status);
                     friend.setUsername(userObj.getString("username"));
@@ -500,9 +502,24 @@ public class LoginBasicTool {
             chosenUser = newValue; // 更新选中的用户
             showMessageList(chosenUser);
             updataChatName();
+            changeButtonAbility();
             messageListView.scrollTo(messageListView.getItems().size()-1);
         });
         basicConfigListView(listView);
+    }
+
+    private static void changeButtonAbility()
+    {
+        if(chosenUser==null){
+            emoji.setDisable(true);
+            fileselector.setDisable(true);
+            inputArea.setDisable(true);
+        }
+        else{
+            emoji.setDisable(false);
+            fileselector.setDisable(false);
+            inputArea.setDisable(false);
+        }
     }
 
     public static List<Message> loadMessageList(User getUser)
@@ -532,14 +549,16 @@ public class LoginBasicTool {
                     User receiverUser=new User();
                     if(senderUsername.equals(nowUsername)){
                         senderUser=nowUser;
-                        String recieverUsername=msg.getRecieverUsername();
-                        receiverUser=new User(msg.getRecieverUsername(),saveUserAvatar.get(recieverUsername));
+                        String recieverUsername=msg.getReceiverUsername();
+                        receiverUser=new User(msg.getReceiverUsername(),saveUserAvatar.get(recieverUsername));
                     }
                     else{
                         senderUser=new User(senderUsername,saveUserAvatar.get(senderUsername));
                         receiverUser=nowUser;
                     }
-                    return new Message(senderUser,receiverUser,msg.getMessageType(),msg.getMessageContent(),msg.getCreatedAt());
+                    Message message =new Message(senderUser,receiverUser,msg.getMessageType(),msg.getMessageContent(),msg.getCreatedAt());
+                    message.setIsUploaded(true);
+                    return message;
                 }).collect(Collectors.toList());
             }
             else {
@@ -619,7 +638,7 @@ public class LoginBasicTool {
                 JSONArray dataArray=jsonObject.getJSONArray("data");
                 List<RequestRecord> requestRecords =new ArrayList<>();
                 for(int i=0;i<dataArray.size();i++){
-                    RequestRecord requestRecord=getRequestFriend( dataArray.getJSONObject(i));
+                    RequestRecord requestRecord=getRequestFriend(dataArray.getJSONObject(i));
                     requestRecords.add(requestRecord);
                 }
                 return requestRecords;
@@ -637,8 +656,8 @@ public class LoginBasicTool {
 
     public static RequestRecord getRequestFriend(JSONObject userObj){
         RequestRecord requestRecord=new RequestRecord();
-        String avatarBase64=userObj.getString("avatar");
-        requestRecord.setAvatar(avatarBae64ToImage(avatarBase64));
+        String avatarUrl=userObj.getString("avatar");
+        requestRecord.setAvatar(new Image(avatarUrl));
         String status=userObj.getString("requestStatus");
         requestRecord.setRequestStatus(status);
         requestRecord.setUsername(userObj.getString("username"));
@@ -715,17 +734,62 @@ public class LoginBasicTool {
 
     public static void setSaveMessageList(Message message){
         User sender=message.getSenderUser();
-        if(saveMessageListView.get(sender)!=null){
-            saveMessageListView.get(sender).add(message);
-        }
-        else{
-            messageList=loadMessageList(sender);
-            saveMessageListView.put(sender,messageList);
-        }
         if(Objects.equals(chosenUser.getUsername(), sender.getUsername())){
+            boolean result=isMessageExist(message);
             messageListView.getItems().add(message);
         }
     }
+
+    public static boolean isMessageExist(Message message){
+        User sender=message.getSenderUser();
+        List<Message> messageList;
+        if(saveMessageListView.get(sender)!=null)
+            messageList=saveMessageListView.get(sender);
+        else
+            messageList=loadMessageList(sender);
+
+        //TODO:检测是否存在这条消息,如果已经存在就无需添加，否则需要添加
+        return false;
+    }
+
+
+    public static List<ContentElemNode> parseMessage(String message) {
+        List<ContentElemNode> resultList = new ArrayList<>();
+        // 111[好色]222[惊讶]
+        // 111
+        // [微笑][微笑]
+        Pattern pattern = Pattern.compile("([^\\[]+)(?=\\[)|\\[([^]]+)]|([^\\[]+)", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(message);
+
+        while (matcher.find()) {
+            if (matcher.group(1) != null) {
+                resultList.add(new TextElemNode(matcher.group(1)));
+            } else if (matcher.group(2) != null) {
+                resultList.add(new EmojiElemNode(OSSUtils.getEmojiUrl(matcher.group(2))));
+            } else if (matcher.group(3) != null) {
+                resultList.add(new TextElemNode(matcher.group(3)));
+            }
+        }
+
+        return resultList;
+    }
+
+    public static String getSuffix(String fileName){
+        int dotIndex = fileName.lastIndexOf('.');
+        // 如果找到了 '.' 并且它不是在第一个字符的位置（这意味着文件有扩展名）
+        if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+            return fileName.substring(dotIndex + 1);
+        }
+        return null;
+    }
+
+    public static String formatSize(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        String[] units = {"KB", "MB", "GB"};
+        int unitIndex = (int) (Math.log(bytes) / Math.log(1024)) - 1;
+        return String.format("%.1f %s", bytes / Math.pow(1024, unitIndex + 1), units[unitIndex]);
+    }
+
 
 
 

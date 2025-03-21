@@ -119,6 +119,16 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.32</version> <!-- 请根据需要选择合适的版本 -->
         </dependency>
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+            <version>3.15.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.fxmisc.richtext</groupId>
+            <artifactId>richtextfx</artifactId>
+            <version>0.11.0</version>
+        </dependency>
     </dependencies>
 
     <build>

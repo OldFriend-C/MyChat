@@ -14,7 +14,7 @@ import java.util.Date;
 @Getter
 public class SendMsg {
     private String senderUsername;
-    private String recieverUsername;
+    private String receiverUsername;
     private String messageType;
     private String messageContent;
     private Date createdAt;

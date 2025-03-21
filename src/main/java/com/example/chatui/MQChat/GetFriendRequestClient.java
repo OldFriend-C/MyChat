@@ -9,6 +9,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
 import javafx.application.Platform;
+import javafx.scene.image.Image;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -27,10 +28,9 @@ public class GetFriendRequestClient {
     private Connection connection;
     private static final String VIRTUAL_HOST="/";
     private Channel channel;
-    private final String friendRequestQueueName;
 
     public GetFriendRequestClient(String username) {
-        friendRequestQueueName=username+"/friendRequest";
+        String friendRequestQueueName = username + "/friendRequest";
         try {
             // 创建与 RabbitMQ 的连接
             ConnectionFactory factory = new ConnectionFactory();
@@ -54,7 +54,7 @@ public class GetFriendRequestClient {
 
                     RequestRecord requestRecord =new RequestRecord();
                     requestRecord.setRequestTime(requestJson.getDate("requestTime"));
-                    requestRecord.setAvatar(avatarBae64ToImage(requestJson.getString("avatar")));
+                    requestRecord.setAvatar(new Image(requestJson.getString("avatar")));
                     requestRecord.setUsername(requestJson.getString("username"));
                     requestRecord.setRequestStatus(requestJson.getString("requestStatus"));
                     processRequest(requestRecord);

@@ -16,6 +16,8 @@ module com.example.chatui {
     requires java.desktop;
     requires javafx.swing;
     requires aliyun.sdk.oss;
+    requires org.fxmisc.flowless;
+    requires org.fxmisc.richtext;
 
     opens com.example.chatui to javafx.fxml;
     exports com.example.chatui.aboutMessage;

@@ -10,10 +10,8 @@ import com.example.chatui.aboutUser.User;
 import com.example.chatui.basic.LoginBasicTool;
 import com.example.chatui.basic.NoSelectionModel;
 import com.example.chatui.friendRequest.RequestStatus;
-import com.rabbitmq.client.impl.MethodArgumentReader;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
-import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -26,10 +24,17 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static com.example.chatui.LoginApp.*;
@@ -53,7 +58,7 @@ public class ChatApp extends Application {
     private static final double SCENHEIGHT=800;
 
     public static List<RequestRecord> requestUsers=new ArrayList<>();
-    public static HashMap<String,Image> saveUserAvatar=new HashMap<>();
+    public static Map<String,Image> saveUserAvatar=new HashMap<>();
     private static ListView<User> friendsListView=new ListView<>();
     private static ListView<RequestRecord> requestListView=new ListView<>();
 
@@ -61,15 +66,28 @@ public class ChatApp extends Application {
     public static boolean isBellRedPoint;
 
     public static ListView<Message> messageListView=new ListView<>();
-    public static HashMap<User,List<Message>> saveMessageListView= new HashMap<>();
+    public static Map<User,List<Message>> saveMessageListView= new HashMap<>();
+
+    public static Map<String,Image> emojiMap=new HashMap<>();
 
     public static List<Message> messageList=new ArrayList<>();
+
+    public static Button emoji =new Button();
+
+    public static Button fileselector=new Button();
+
+    public static TextArea inputArea=new TextArea();
+
+
+
 
 
     @Override
     public void start(Stage primaryStage) {
         // 隐藏自带的标题栏
         primaryStage.initStyle(StageStyle.TRANSPARENT);
+
+        primaryStage.setResizable(true);
 
         // 创建自定义标题栏
         HBox titleBar = creatChatTitle(primaryStage);
@@ -82,11 +100,10 @@ public class ChatApp extends Application {
         VBox centerPane = contentPane();
 
         // 创建右侧聊天界面
-        VBox rightPane = chatPane();
+        VBox rightPane = chatPane(primaryStage);
 
         //创建侧边栏
-        configSidebar();
-
+        ConfigSidebar();
 
 
         //下方主要内容
@@ -95,22 +112,50 @@ public class ChatApp extends Application {
         allPane.setSpacing(0);
         allPane.setPadding(new Insets(0));
         allPane.setStyle("-fx-background-color: #FFFFFF;");
-        allPane.setOnMouseClicked(e->toggleSidebar(0));
         HBox.setHgrow(leftPane, Priority.ALWAYS);
         HBox.setHgrow(centerPane, Priority.ALWAYS);
         HBox.setHgrow(rightPane, Priority.ALWAYS);
         VBox mainPane=new VBox(titleBar,allPane);
 
-        root.setOnMouseClicked(e->toggleSidebar(0));
+
         //将全部内容加入根节点
         root.getChildren().addAll(mainPane,sliderbar);
 
         // 设置背景为全白色
         Scene scene = new Scene(root, SCENEWIDTH, SCENHEIGHT);
+        // 设置背景为全白色
         sliderbar.setTranslateX(SCENEWIDTH/2+sliderbar.getMaxWidth()/2);
         scene.getStylesheets().add(LoginBasicTool.class.getResource("/com/example/chatui/styles.css").toExternalForm());
+
         primaryStage.setScene(scene);
-        primaryStage.setTitle("Chat App");
+
+        if(!friendsList.isEmpty()){
+            // 自动选择第一个用户
+            friendsListView.getSelectionModel().selectFirst(); // 选择第一个用户
+        }
+
+
+        //添加关闭侧边栏
+        sliderbar.getScene().setOnMouseClicked(event -> {
+            if (!sliderbar.getBoundsInParent().contains(event.getSceneX(), event.getSceneY()) && isSidebarVisible) {
+                toggleSidebar();
+            }
+        });
+
+        //设置按钮的可用性
+        primaryStage.getScene().getWindow().setOnShown(e->{
+            if(chosenUser==null){
+                emoji.setDisable(true);
+                fileselector.setDisable(true);
+                inputArea.setDisable(true);
+            }
+            else{
+                emoji.setDisable(false);
+                fileselector.setDisable(false);
+                inputArea.setDisable(false);
+            }
+        });
+
         primaryStage.show();
 
     }
@@ -164,24 +209,16 @@ public class ChatApp extends Application {
         friendsList=getFriendsList();//获取好友列表
         //创建好友列表
         friendsListView = new ListView<>();
-        //保存头像
-        for(User friend: friendsList){
-            saveUserAvatar.putIfAbsent(friend.getUsername(),friend.getAvatar());
-        }
-
         friendsListView.getItems().addAll(friendsList);
         configureUserListView(friendsListView);
-
         // 添加成员列表
         contentPlace.getChildren().add(friendsListView);
-
-
         return contentPlace;
     }
 
 
     // 右侧面板
-    private VBox chatPane() {
+    private VBox chatPane(Stage primaryStage) {
         chatPlace.setSpacing(10);
         chatPlace.setPrefWidth(750);
         chatPlace.setStyle("-fx-background-color: #FFFFFF;");
@@ -201,25 +238,41 @@ public class ChatApp extends Application {
         chatPlace.getChildren().add(chatname);
 
 
-
-
         messageListView.setPrefHeight(650);
         messageListView.getItems().addAll(messageList);
         messageListView.setCellFactory(param -> new MessageCell()); // 设置自定义 Cell
         messageListView.setStyle("-fx-background-color: transparent");
         messageListView.setEditable(false);
         messageListView.setSelectionModel(new NoSelectionModel<>());
-        //添加可以关闭侧边通知栏的功能
-        messageListView.setOnMouseClicked(e->toggleSidebar(0));
 
         showMessageList(chosenUser);
         chatPlace.getChildren().add(messageListView);
+
+        messageListView.setOnMouseClicked(mouseEvent ->
+        {
+            if(isSidebarVisible){
+                toggleSidebar();
+            }
+        });
+        // 输入框
+        inputArea = new TextArea();
+        inputArea.setStyle("-fx-font-size: 16;");
+        inputArea.setPrefHeight(250);
+        inputArea.setMaxWidth(850);
+        inputArea.setWrapText(true); // 自动换行
+        inputArea.setPromptText("Enter Something...");
+
+
 
         //功能面板
         HBox functionPane=new HBox();
         functionPane.setAlignment(Pos.TOP_LEFT);
 
-        Button emoji=new Button();   //发送表情按钮
+        //保存所有表情图片
+        initEmojis();
+//        emojiMap=OSSUtils.getEmojis();
+
+        emoji=new Button();   //发送表情按钮
         ImageView emojiIcon = new ImageView(new Image("file:icons/emoji.png"));
         emojiIcon.setFitWidth(30);
         emojiIcon.setFitHeight(30);
@@ -227,6 +280,7 @@ public class ChatApp extends Application {
         emoji.setStyle("-fx-background-color: transparent;");
         emoji.setOnMouseClicked(event -> {
             emojiIcon.setImage(new Image("file:icons/changedemoji.png"));
+            ConfigEmojiTable(primaryStage,inputArea);
         });
         emoji.setOnMouseEntered(event -> {
             emojiIcon.setImage(new Image("file:icons/changedemoji.png"));
@@ -235,13 +289,16 @@ public class ChatApp extends Application {
             emojiIcon.setImage(new Image("file:icons/emoji.png"));
         });
 
-        Button fileselector=new Button();   //传输文件按钮
+
+
+        fileselector=new Button();   //传输文件按钮
         ImageView fileselectorIcon = new ImageView(new Image("file:icons/file.png"));
         fileselectorIcon.setFitWidth(25);
         fileselectorIcon.setFitHeight(25);
         fileselector.setGraphic(fileselectorIcon);
         fileselector.setStyle("-fx-background-color: transparent;");
         fileselector.setOnMouseClicked(event -> {
+            fileselector.setOnMouseClicked(e-> handleFileUpload(primaryStage));  //上传文件
             fileselectorIcon.setImage(new Image("file:icons/changedfile.png"));
         });
         fileselector.setOnMouseEntered(event -> {
@@ -254,6 +311,8 @@ public class ChatApp extends Application {
         functionPane.getChildren().addAll(emoji,fileselector);
         chatPlace.getChildren().add(functionPane);
 
+        //将输入框添加布局
+        chatPlace.getChildren().add(inputArea);
 
 
         // 发送按钮
@@ -266,21 +325,7 @@ public class ChatApp extends Application {
         // 设置按钮的上下左右边距
         HBox.setMargin(sendButton, new Insets(10, 20, 10, 0)); // 上、右、下、左的边距
         sendButton.setStyle("-fx-background-color: #0099FF;-fx-text-fill: #4DB8FF");
-
-
-        // 输入框
-        TextArea inputArea = new TextArea();
-        inputArea.setPrefHeight(250);
-        inputArea.setMaxWidth(850);
-        inputArea.setWrapText(true); // 自动换行
-        inputArea.setPromptText("Enter Something...");
-
-
-
-        chatPlace.getChildren().add(inputArea);
-        sendButtonBox.getChildren().addAll(sendButton);
-
-
+        sendButtonBox.getChildren().add(sendButton);
 
         inputArea.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.isEmpty()) {
@@ -310,8 +355,26 @@ public class ChatApp extends Application {
 
         // 将组件添加到聊天区域
         chatPlace.getChildren().add(sendButtonBox);
-
         return chatPlace;
+    }
+
+    private void initEmojis() {
+        String directoryPath = "emojiPictures";  // 例如 "C:\\Users\\YourUsername\\Documents"
+
+        try {
+            // 使用Files.list()方法获取文件夹下的所有文件
+            List<Path> fileList = Files.list(Paths.get(directoryPath)).toList();
+
+            // 遍历文件列表并打印文件名
+            for (Path path : fileList) {
+                String filename=path.getFileName().toString();
+                String emojiId=filename.substring(0,filename.lastIndexOf('.'));
+                emojiMap.put("["+emojiId+"]",new Image("file:"+directoryPath+"/"+emojiId+".png"));
+            }
+        } catch (IOException e) {
+            // 处理异常
+            e.printStackTrace();
+        }
     }
 
 
@@ -324,7 +387,7 @@ public class ChatApp extends Application {
     }
 
     //创建侧边栏
-    private static void configSidebar() {
+    private void ConfigSidebar() {
         sliderbar = new VBox();
         sliderbar.setId("sidebar");
         sliderbar.setAlignment(Pos.TOP_CENTER);
@@ -339,7 +402,7 @@ public class ChatApp extends Application {
     }
 
 
-    private void toggleSidebar(int status) {
+    private void toggleSidebar() {
         chosenRequestRecord =null;
         TranslateTransition transition = new TranslateTransition(Duration.millis(300), sliderbar);
         if(isSidebarVisible){
@@ -348,11 +411,9 @@ public class ChatApp extends Application {
             isSidebarVisible=!isSidebarVisible;
         }
         else {
-            if (status == 1) {
-                transition.setToX(SCENEWIDTH / 2 - sliderbar.getMaxWidth() / 2);
-                transition.play();
-                isSidebarVisible = !isSidebarVisible;
-            }
+            transition.setToX(SCENEWIDTH / 2 - sliderbar.getMaxWidth() / 2);
+            transition.play();
+            isSidebarVisible = !isSidebarVisible;
         }
     }
 
@@ -394,7 +455,7 @@ public class ChatApp extends Application {
         bellButton.setGraphic(bellIcon);
         bellButton.setStyle("-fx-background-color: transparent;");
         configureBellButton(bellButton, bellIcon);
-        bellButton.setOnMouseClicked(e-> toggleSidebar(1));
+        bellButton.setOnMouseClicked(e-> toggleSidebar());
         rightBox.getChildren().add(bellButton);
 
         // 添加搜索按钮
@@ -459,6 +520,113 @@ public class ChatApp extends Application {
         friendsListView.getItems().addAll(friendsList);
         System.out.println("朋友列表更新成功");
     }
+
+
+    private void ConfigEmojiTable(Stage primaryStage,TextArea inputArea)
+    {
+        // 创建表情框的网格布局
+        GridPane emojiGrid = new GridPane();
+        emojiGrid.setStyle("-fx-background-color:  #F2F2F2; -fx-border-radius: 5; -fx-background-radius: 5;");
+        emojiGrid.setHgap(10);
+        emojiGrid.setVgap(10);
+        emojiGrid.setPadding(new Insets(10));
+        emojiGrid.setPrefWidth(150);
+        emojiGrid.setPrefHeight(150);
+
+        //表情框主体
+        Popup emojiPopup = new Popup();
+        // 添加表情图标到网格布局中
+        int row = 0, col = 0;
+        for (String emojiId : emojiMap.keySet()) {
+            // 创建一个按钮作为表情图标
+            Button emojiButton = new Button(emojiId);
+            // 创建 ImageView 并设置大小
+            ImageView emojiView = new ImageView(emojiMap.get(emojiId));
+            emojiView.setFitWidth(25);  // 设置图标宽度
+            emojiView.setFitHeight(25); // 设置图标高度
+            emojiView.setPreserveRatio(true); // 保持比例
+
+            emojiButton.setGraphic(emojiView);
+            emojiButton.setPrefSize(40, 40); // 设置按钮的大小
+            emojiButton.setMinSize(40, 40); // 设置按钮的最小大小
+            emojiButton.setMaxSize(40, 40); // 设置按钮的最大大小
+            emojiButton.setStyle("-fx-background-color: #F2F2F2; -fx-border-color: transparent;");
+
+            // 鼠标悬停效果
+            emojiButton.setOnMouseEntered(event -> {
+                emojiButton.setStyle("-fx-background-color: #bababa; ");
+            });
+
+            emojiButton.setOnMouseExited(event -> {
+                emojiButton.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
+            });
+
+            // 点击事件处理
+            emojiButton.setOnAction(event -> {
+                // 获取当前输入的文本
+                String currentText = inputArea.getText();
+                // 将表情符号添加到输入框中
+                inputArea.setText(currentText + emojiId); // 使用 emojiId 或者其他表情表示
+                // 将输入框的光标移动到文本末尾
+                inputArea.positionCaret(currentText.length() + emojiId.length());
+                //关闭表情框
+                if(emojiPopup.isShowing()){
+                    emojiPopup.hide();
+                }
+                inputArea.requestFocus();
+            });
+
+            emojiGrid.add(emojiButton, col, row);
+            col++;
+            if (col > 6) {
+                col = 0;
+                row++;
+            }
+        }
+
+        emojiPopup.getContent().add(emojiGrid);
+        emojiPopup.setAutoHide(true); // 点击外部区域时自动隐藏
+
+            // 计算并设置 Popup 的初始位置
+        updatePopupPosition(primaryStage, emojiPopup, emojiGrid);
+
+        // 显示 Popup
+        emojiPopup.show(emoji.getScene().getWindow());
+
+        // 监听窗口移动事件以更新 Popup 位置
+        emoji.getScene().getWindow().setOnShown(event ->  updatePopupPosition(primaryStage,emojiPopup,emojiGrid));
+        emoji.getScene().getWindow().xProperty().addListener((observable, oldValue, newValue) ->  updatePopupPosition(primaryStage,emojiPopup,emojiGrid));
+        emoji.getScene().getWindow().yProperty().addListener((observable, oldValue, newValue) ->  updatePopupPosition(primaryStage,emojiPopup,emojiGrid));
+    }
+
+
+    private void updatePopupPosition(Stage primaryStage,Popup emojiPopup,GridPane emojiGrid) {
+        // 计算按钮的位置
+        double buttonX = emoji.localToScene(0, 0).getX();
+        double buttonY = emoji.localToScene(0, 0).getY();
+
+
+        // 设置 Popup 的位置
+        emojiPopup.setX(primaryStage.getX()+buttonX-emojiGrid.getPrefWidth()/2);
+        emojiPopup.setY(primaryStage.getY()+buttonY - emojiGrid.getPrefHeight()*2.1); // 留出一些间距
+    }
+
+
+    private void handleFileUpload(Stage primaryStage)
+    {
+        FileChooser chooser = new FileChooser();
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("All Files","*.*"));
+        File file = chooser.showOpenDialog(primaryStage);
+        if (file != null) {
+            Message fileMessage=new Message(nowUser,chosenUser,MessageType.FILE.getDescription(),file.getPath(),new Date());
+            saveMessageListView.get(chosenUser).add(fileMessage);
+            messageListView.getItems().add(fileMessage);
+            //自动滚到最后一行
+            messageListView.scrollTo(messageListView.getItems().size()-1);
+        }
+    }
+
+
 
     public static void main(String[] args) {
         launch(args);

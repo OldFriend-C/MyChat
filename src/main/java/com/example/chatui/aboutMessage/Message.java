@@ -18,4 +18,15 @@ public class Message {
     private String messageType;
     private String messageContent;
     private Date createdAt;
+    private Boolean isUploaded=false;
+
+    public Message(User senderUser, User receiverUser, String messageType, String messageContent, Date createdAt) {
+        this.senderUser = senderUser;
+        this.receiverUser = receiverUser;
+        this.messageType = messageType;
+        this.messageContent = messageContent;
+        this.createdAt = createdAt;
+    }
+
+
 }

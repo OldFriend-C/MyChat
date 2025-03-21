@@ -10,6 +10,7 @@ import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
 import static com.example.chatui.ChatApp.*;
@@ -48,16 +49,21 @@ public class  SendMessageClient{
     public void sendMessage(SendMsg message) {
         try {
             String messageJson = JSON.toJSONString(message);
+            //前端显示消息发送
+            displayMessage(message);
             // 发送消息到 RabbitMQ 队列
-            processMessage(message);
             channel.basicPublish("", QUEUE_NAME, null, messageJson.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void processMessage(SendMsg message) {
+    private void displayMessage(SendMsg message) {
+        if(Objects.equals(message.getMessageType(), MessageType.FILE.getDescription()))
+            return;
+
         Message newMessage=new Message(nowUser,chosenUser, MessageType.TEXT.getDescription(),message.getMessageContent(),message.getCreatedAt());
+
         saveMessageListView.get(chosenUser).add(newMessage);
         messageListView.getItems().add(newMessage);
         //自动滚到最后一行

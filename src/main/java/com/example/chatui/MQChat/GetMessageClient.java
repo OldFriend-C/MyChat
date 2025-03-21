@@ -29,10 +29,9 @@ public class GetMessageClient {
     private Connection connection;
     private static final String VIRTUAL_HOST="/";
     private Channel channel;
-    private final String messsageQueueName;
 
     public GetMessageClient() {
-        messsageQueueName=nowUsername+"/message";
+        String messsageQueueName = nowUsername + "/message";
         try {
             // 创建与 RabbitMQ 的连接
             ConnectionFactory factory = new ConnectionFactory();
@@ -44,7 +43,6 @@ public class GetMessageClient {
             connection = factory.newConnection();
             channel = connection.createChannel();
 
-            // 为用户创建和订阅一个以用户名命名的监听好友请求的队列
             channel.queueDeclare(messsageQueueName, true, false, false, null);
             System.out.println(" [*] Waiting for message messages in queue: " + messsageQueueName);
 

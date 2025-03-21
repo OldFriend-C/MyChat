@@ -4,11 +4,11 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.example.chatui.MQChat.GetFriendRequestClient;
 import com.example.chatui.MQChat.GetMessageClient;
+import com.example.chatui.MQChat.SendFriendRequestClient;
 import com.example.chatui.MQChat.SendMessageClient;
 import com.example.chatui.aboutUser.User;
 import com.example.chatui.aboutUser.UserDeserializer;
 import com.example.chatui.basic.LoginBasicTool;
-import com.example.chatui.MQChat.SendFriendRequestClient;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
@@ -36,12 +36,15 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.util.Base64;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 import static com.example.chatui.basic.LoginBasicTool.*;
@@ -58,7 +61,8 @@ public class LoginApp extends Application {
     public static final String messageUrl ="http://"+hostIP+":"+port+"/message/";
     public static final String LogoPath="avatar/Logo.jpeg";
     public static final String loginurl=userUrl+"login";
-    public static final String registerUrl=userUrl+"register";
+    public static final String registerUserUrl=userUrl+"register/user";
+    public static final String registerAvatarUrl=userUrl+"register/avatar";
 
     public static String nowUsername;
     public static String nowPassword;
@@ -245,7 +249,8 @@ public class LoginApp extends Application {
             String password = passwordField.getText();
             if(selectedFile!=null){
                 if (isValidAccountNumber(username) && isValidPassword(password)) {
-                    boolean result=sendRegisterData(username, password);
+                    String fileUrl=sendRegisterAvatarData(selectedFile);
+                    boolean result=sendRegisterUserData(username, password,fileUrl);
                     if(result){
                         // 注册成功逻辑
                         loginAndRegisterSet(username, password);
@@ -267,22 +272,44 @@ public class LoginApp extends Application {
 
     }
 
-    private boolean sendRegisterData(String username, String password) {
+    private String sendRegisterAvatarData(File selectedFile) {
+
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpPost post = new HttpPost(registerUrl);
+            HttpPost uploadAvatarDataPost = new HttpPost(registerAvatarUrl);
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            builder.addBinaryBody("avatar", selectedFile, ContentType.create("image/jpeg"), selectedFile.getName()); // 根据实际文件类型调整
+            uploadAvatarDataPost.setEntity(builder.build());
+
+            // 执行请求
+            HttpResponse response = httpClient.execute(uploadAvatarDataPost);
+            int statusCode = response.getStatusLine().getStatusCode();
+            if(statusCode==200){
+                BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+                String jsonResponse = reader.lines().collect(Collectors.joining()); // 获取响应内容
+                // 解析 JSON
+                JSONObject jsonObject = JSONObject.parseObject(jsonResponse);
+                int code=jsonObject.getIntValue("code");
+                if(code!=0){
+                    return jsonObject.getString("data");
+                }
+                return null;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    private boolean sendRegisterUserData(String username, String password,String fileUrl) {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpPost post = new HttpPost(registerUserUrl);
 
             // 创建 JSON 对象
             JSONObject json = new JSONObject();
             json.put("username", username);
             json.put("password", password);
-
-            // 如果需要上传头像文件，可以将其转换为 Base64 编码并加到 JSON 中
-            if (avatar.getImage() != null) {
-                // 获取 ImageView 中的 Image 对象
-                byte[] fileContent = Files.readAllBytes(selectedFile.toPath());
-                String encodedString = Base64.getEncoder().encodeToString(fileContent);
-                json.put("avatar", encodedString);
-            }
+            json.put("avatar", fileUrl); // 头像的 URL
+            json.put("creatAt",new Date());
 
             // 设置 JSON 内容
             StringEntity entity = new StringEntity(json.toString(), ContentType.APPLICATION_JSON);
@@ -320,13 +347,6 @@ public class LoginApp extends Application {
             json.put("username", username);
             json.put("password", password);
 
-            // 如果需要上传头像文件，可以将其转换为 Base64 编码并加到 JSON 中
-            if (selectedFile != null) {
-                byte[] fileContent = Files.readAllBytes(selectedFile.toPath());
-                String encodedString = Base64.getEncoder().encodeToString(fileContent);
-                json.put("avatar", encodedString);
-            }
-
             // 设置 JSON 内容
             StringEntity entity = new StringEntity(json.toString(), ContentType.APPLICATION_JSON);
             post.setEntity(entity);
@@ -363,10 +383,8 @@ public class LoginApp extends Application {
                 int code=jsonObject.getIntValue("code");
                 //表示没有找到头像
                 if(code==1){
-                    String base64String = jsonObject.getString("data"); // 这里获取数据部分
-                    // 解码 Base64 字符串为字节数组
-                    byte[] imageBytes = Base64.getDecoder().decode(base64String);
-                    return new Image(new ByteArrayInputStream(imageBytes)); // 返回 Image 对象
+                    String imageUrl = jsonObject.getString("data"); // 这里获取数据部分
+                    return new Image(imageUrl); // 返回 Image 对象
                 }
                 return null;  //没找到对应用户
             } else {
