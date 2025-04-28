@@ -22,7 +22,8 @@
 
 **（1）注册界面**
 
-![image-20250321212908226](https://toms.oss-cn-beijing.aliyuncs.com/img/login.png?Expires=1742566534&OSSAccessKeyId=TMP.3KqQ1U5zFR9jPyUN8o1GEPkX5G29p15Df2dvPcQSxpz63C6Ve5dVGBtCsVp73yuFhigNipE1juhRS5RML5NrzAkxDCeetU&Signature=%2F9gKkUg0IxwOIisre%2BuYWwkJaN0%3D)
+![chat.png](.\img\chat.png)
+
 
 **（2）聊天界面**
 
